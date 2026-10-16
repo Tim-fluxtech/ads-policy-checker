@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pre-flight check for ad copy against Meta, Google Search and TikTok advertising policies.">
+<title>Ads Policy Checker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ad-manager workspace. Campaign tree rail | editor cards | preview + review column, with a sticky publish bar. */
+:root {
+  --bg: #EEF0F4;
+  --surface: #FFFFFF;
+  --sunk: #F3F4F7;
+  --ink: #1B1F27;
+  --muted: #5D6575;
+  --line: #DCDFE6;
+  --accent: #2354D6;
+  --accent-soft: #E7EDFC;
+  --accent-ink: #FFFFFF;
+  --block: #C4302A;
+  --warn: #A66A0E;
+  --tip: #2A7476;
+  --pass: #2D8549;
+  --link: #1A47BF;
+  --font-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(20 24 32 / 0.06), 0 1px 1px rgb(20 24 32 / 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1116;
+    --surface: #171B22;
+    --sunk: #1E232B;
+    --ink: #E6E9EF;
+    --muted: #9AA2B1;
+    --line: #2B313C;
+    --accent: #7E98FF;
+    --accent-soft: #1F2945;
+    --accent-ink: #0E1116;
+    --block: #F07A72;
+    --warn: #E4B24E;
+    --tip: #62C4C0;
+    --pass: #63C485;
+    --link: #9DB0FF;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1116;
+  --surface: #171B22;
+  --sunk: #1E232B;
+  --ink: #E6E9EF;
+  --muted: #9AA2B1;
+  --line: #2B313C;
+  --accent: #7E98FF;
+  --accent-soft: #1F2945;
+  --accent-ink: #0E1116;
+  --block: #F07A72;
+  --warn: #E4B24E;
+  --tip: #62C4C0;
+  --pass: #63C485;
+  --link: #9DB0FF;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 1320px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.005em; }
+h2 { font-size: 17px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 700; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.eyebrow { font: 500 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+svg { display: block; }
+
+/* Top bar */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; padding-top: env(safe-area-inset-top, 0px); }
+.topbar .inner { display: flex; align-items: center; gap: 16px; min-height: 56px; flex-wrap: wrap; padding-block: 8px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.brand b { font: 800 17px/1 var(--font-display); }
+.crumbs { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; min-width: 0; flex: 1; }
+.crumbs span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+.crumbs .sep { color: var(--line); }
+.crumbs .now { color: var(--ink); font-weight: 600; }
+.example { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.example select { width: auto; padding: 6px 30px 6px 10px; font-size: 13px; }
+@media (max-width: 760px) { .crumbs { display: none; } .example { margin-left: auto; } }
+
+/* Workspace grid */
+.app { display: grid; grid-template-columns: 1fr; gap: 16px; padding-block: 16px 96px; align-items: start; }
+@media (min-width: 820px) { .app { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .rail { grid-column: 1 / -1; } }
+@media (min-width: 1180px) { .app { grid-template-columns: 210px minmax(0, 1fr) 440px; } .rail { grid-column: auto; position: sticky; top: 76px; } }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Rail */
+.rail { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow); }
+@media (min-width: 820px) and (max-width: 1179px) { .rail { flex-direction: row; } .rail .step { flex: 1; } .rail .step + .step { margin-left: 0; } .rail .rail-new { display: none; } }
+.step { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--ink); text-decoration: none; min-width: 0; }
+.step:hover { background: var(--sunk); }
+.step[aria-current="true"] { background: var(--accent-soft); }
+.step + .step { margin-left: 12px; }
+.step + .step + .step { margin-left: 24px; }
+@media (max-width: 819px) { .step + .step, .step + .step + .step { margin-left: 0; } }
+.lvl { width: 28px; height: 28px; border-radius: 7px; background: var(--sunk); color: var(--muted); display: grid; place-items: center; }
+.step[aria-current="true"] .lvl { background: var(--accent); color: var(--accent-ink); }
+.step small { display: block; font: 500 11px/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.step b { display: block; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.step > span:nth-child(2) { min-width: 0; }
+.badge { font: 600 11px/1 var(--font-mono); min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; color: #FFFFFF; background: var(--c); font-variant-numeric: tabular-nums; }
+.badge.ok { background: transparent; color: var(--pass); border: 1.5px solid var(--pass); font-size: 10px; }
+.rail-new { margin-top: 8px; border-top: 1px solid var(--line); padding: 10px 10px 4px; color: var(--muted); font-size: 12px; }
+
+/* Cards and fields */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); scroll-margin-top: 76px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.card-head .t { display: flex; align-items: center; gap: 10px; }
+.card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+label { font-size: 13px; font-weight: 600; }
+.help { font-size: 12px; color: var(--muted); }
+.count { font: 500 12px/1.4 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.count.over { color: var(--block); }
+input, select, textarea {
+  font: 400 14px/1.45 var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 100%;
+  min-width: 0;
+}
+input:hover, select:hover, textarea:hover { border-color: var(--muted); }
+textarea { resize: vertical; min-height: 110px; }
+select { cursor: pointer; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 440px) { .row2 { grid-template-columns: 1fr; } }
+.field-flag { font-size: 12px; display: flex; gap: 6px; align-items: flex-start; color: var(--c); }
+.field-flag:empty { display: none; }
+.field.has-block input, .field.has-block textarea, .field.has-block select { border-color: var(--block); }
+.field.has-warn input, .field.has-warn textarea, .field.has-warn select { border-color: var(--warn); }
+.idrow { display: flex; align-items: center; gap: 10px; }
+.idrow .avatar { width: 36px; height: 36px; }
+
+/* Preview */
+.pv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pv-head select { width: auto; font-weight: 600; }
+.stage { background: var(--sunk); border-radius: 8px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.stage-note { font-size: 12px; color: var(--muted); text-align: center; max-width: 40ch; }
+.stage-note:empty { display: none; }
+.ad { width: 100%; max-width: 360px; font-size: 13.5px; line-height: 1.42; color: #1C1E21; background: #FFFFFF; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3D63DD, #7A5AF0); flex: none; color: #FFFFFF; display: grid; place-items: center; font: 700 13px/1 var(--font-display); }
+.ring { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3.5px #D23A6E; }
+.ad b { font-weight: 600; }
+.ad small { color: #65676B; font-size: 12px; }
+.creative { aspect-ratio: 1 / 1; background: repeating-linear-gradient(135deg, #EEF0F3 0 12px, #E1E4EA 12px 13px); display: grid; place-items: center; color: #7A808C; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.creative.wide { aspect-ratio: 1.91 / 1; }
+.copy { white-space: pre-wrap; overflow-wrap: anywhere; }
+.empty-copy { color: #8A8D91; font-style: italic; }
+
+.fb-top { display: flex; gap: 8px; align-items: center; padding: 12px 12px 8px; }
+.fb-top > div { flex: 1; min-width: 0; }
+.fb-top b { display: block; }
+.fb-body { padding: 0 12px 10px; }
+.fb-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #F0F2F5; }
+.fb-link > div { flex: 1; min-width: 0; }
+.fb-link small { display: block; text-transform: uppercase; }
+.fb-link b { display: block; overflow-wrap: anywhere; font-size: 15px; }
+.btn-cta { flex: none; background: #E4E6EB; color: #1C1E21; font-weight: 600; font-size: 13px; padding: 7px 12px; border-radius: 6px; }
+.fb-actions { display: flex; justify-content: space-around; padding: 6px 8px; border-top: 1px solid #E4E6EB; margin: 0 12px; color: #65676B; font-weight: 600; font-size: 13px; }
+.fb-actions span { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.dots { color: #65676B; letter-spacing: 1px; font-weight: 700; }
+
+.ig-top { display: flex; gap: 10px; align-items: center; padding: 10px 12px; }
+.ig-top > div { flex: 1; min-width: 0; }
+.ig-top b, .ig-top small { display: block; line-height: 1.2; }
+.ig-cta { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; font-weight: 600; border-bottom: 1px solid #EFEFEF; color: #1C1E21; }
+.ig-icons { display: flex; gap: 14px; padding: 10px 12px 6px; color: #1C1E21; }
+.ig-icons .sp { flex: 1; }
+.ig-cap { padding: 0 12px 12px; overflow-wrap: anywhere; }
+.ig-cap .copy { white-space: normal; }
+
+.story { max-width: 270px; background: #101114; color: #FFFFFF; }
+.story-screen { aspect-ratio: 9 / 16; position: relative; display: flex; flex-direction: column; background: linear-gradient(180deg, #343A48 0%, #1A1D24 55%, #0D0F13 100%); }
+.story-bar { height: 2.5px; margin: 8px 8px 0; border-radius: 2px; background: rgb(255 255 255 / 0.35); overflow: hidden; }
+.story-bar i { display: block; width: 38%; height: 100%; background: #FFFFFF; }
+.story-top { display: flex; gap: 8px; align-items: center; padding: 8px 10px; }
+.story-top b { font-size: 13px; }
+.story-top small { color: rgb(255 255 255 / 0.75); font-size: 11px; }
+.story-mid { flex: 1; display: grid; place-items: center; color: rgb(255 255 255 / 0.4); font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.story-cap { padding: 0 14px 10px; font-size: 13px; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgb(0 0 0 / 0.5); }
+.story-cta { margin: 0 auto 16px; background: #FFFFFF; color: #1C1E21; font-weight: 600; font-size: 13px; padding: 7px 16px; border-radius: 999px; display: flex; align-items: center; gap: 6px; }
+
+.gads { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.g-site { display: flex; gap: 10px; align-items: center; }
+.g-site b, .g-site small { display: block; line-height: 1.25; }
+.g-fav { width: 26px; height: 26px; border-radius: 50%; background: #F1F3F4; border: 1px solid #DADCE0; flex: none; }
+.g-head { color: #1A0DAB; font-size: 19px; line-height: 1.3; overflow-wrap: anywhere; }
+.g-desc { color: #4D5156; overflow-wrap: anywhere; }
+
+.tt { max-width: 270px; }
+.tt-screen { aspect-ratio: 9 / 16; background: linear-gradient(180deg, #2A2F3A 0%, #12151B 100%); color: #F4F5F8; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; }
+.tt-hook { font: 800 19px/1.15 var(--font-display); text-align: center; margin-top: 22%; overflow-wrap: anywhere; }
+.tt-bottom { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.tt-bottom p { overflow-wrap: anywhere; }
+.tt-sp { font-size: 11px; opacity: 0.75; }
+.tt-cta { background: #FE2C55; color: #FFFFFF; text-align: center; font-weight: 600; padding: 8px; border-radius: 4px; }
+
+mark.hl { color: inherit; border-radius: 3px; padding: 0 1px; text-decoration: underline wavy; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+mark.hl.block { background: rgb(196 48 42 / 0.16); text-decoration-color: #C4302A; }
+mark.hl.warn { background: rgb(214 150 30 / 0.2); text-decoration-color: #B07410; }
+mark.hl.tip { background: rgb(42 116 118 / 0.14); text-decoration-color: #2A7476; }
+.story mark.hl.block, .tt mark.hl.block { background: rgb(240 122 114 / 0.38); text-decoration-color: #FF8A82; }
+.story mark.hl.warn, .tt mark.hl.warn { background: rgb(228 178 78 / 0.38); text-decoration-color: #F1C46A; }
+.story mark.hl.tip, .tt mark.hl.tip { background: rgb(98 196 192 / 0.32); text-decoration-color: #7FD8D4; }
+
+/* Review */
+.verdict-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.stamp {
+  font: 800 19px/1 var(--font-display); text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--v); border: 3px solid var(--v); border-radius: 6px; padding: 9px 12px; transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--v);
+}
+.stamp.thunk { animation: thunk 260ms ease-out; }
+@keyframes thunk { from { transform: rotate(-3deg) scale(1.12); } to { transform: rotate(-3deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .stamp.thunk { animation: none; } }
+.score { display: flex; flex-direction: column; gap: 2px; }
+.score b { font: 700 28px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.score small { font-size: 12px; color: var(--muted); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--font-mono); padding: 6px 9px; border-radius: 999px; background: var(--sunk); white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; display: inline-block; }
+.compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cmp { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; font: inherit; color: var(--ink); min-width: 0; }
+.cmp:hover { border-color: var(--muted); }
+.cmp[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.cmp small { font: 500 10.5px/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.cmp span { font-weight: 600; font-size: 13px; color: var(--v); display: flex; align-items: center; gap: 6px; }
+@media (max-width: 400px) { .compare { grid-template-columns: 1fr; } }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 0 -18px; padding: 0 18px; }
+.tab { font: 600 13px/1 var(--font-body); color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 8px 11px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .n { font: 600 11px/1 var(--font-mono); background: var(--sunk); border-radius: 999px; padding: 3px 6px; }
+.f-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.f-item { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding-block: 12px; border-top: 1px solid var(--line); }
+.f-item:first-child { border-top: 0; padding-top: 4px; }
+.f-ico { width: 20px; height: 20px; border-radius: 50%; background: var(--c); color: #FFFFFF; display: grid; place-items: center; font: 700 12px/1 var(--font-body); margin-top: 1px; }
+.f-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.f-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sev { font: 600 10.5px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c); }
+.area { font: 500 11.5px/1 var(--font-mono); color: var(--muted); }
+.f-title { font-weight: 600; }
+.quotes { display: flex; flex-wrap: wrap; gap: 6px; }
+.quote { font: 400 12.5px/1.3 var(--font-mono); background: var(--sunk); border-radius: 5px; padding: 3px 7px; overflow-wrap: anywhere; }
+.quote em { font-style: normal; color: var(--muted); }
+.why { color: var(--muted); font-size: 13px; }
+.fix { font-size: 13px; }
+.fix b { font-weight: 600; }
+.jump { background: none; border: 0; padding: 0; color: var(--link); font: 600 12.5px var(--font-body); cursor: pointer; align-self: flex-start; }
+.clean { display: flex; gap: 10px; align-items: center; padding: 6px 0; color: var(--muted); }
+
+/* Buttons, AI, bar */
+.btn { font: 600 14px/1 var(--font-body); padding: 10px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover:not(:disabled) { background: var(--sunk); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn[hidden] { display: none; }
+.ai-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ai-out { display: flex; flex-direction: column; gap: 12px; }
+.ai-out:empty { display: none; }
+.rewrite { border: 1px dashed var(--accent); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; background: var(--accent-soft); }
+.rewrite p { overflow-wrap: anywhere; }
+.rewrite .lbl { font: 500 10.5px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+.pubbar { position: sticky; bottom: 0; z-index: 4; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pubbar .inner { display: flex; align-items: center; gap: 12px; min-height: 60px; padding-block: 10px; flex-wrap: wrap; }
+.pub-status { flex: 1 1 240px; display: flex; align-items: center; gap: 10px; font-size: 13px; min-width: 0; }
+.pub-status b { font-weight: 600; }
+.pub-btns { display: flex; gap: 8px; }
+@media (max-width: 520px) {
+  .pubbar .inner { gap: 8px; }
+  .pub-status .muted { display: none; }
+  .pub-btns { flex: 1 1 100%; }
+  .pub-btns .btn { flex: 1; justify-content: center; }
+}
+.toast { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 500; max-width: calc(100vw - 32px); z-index: 6; box-shadow: 0 6px 20px rgb(0 0 0 / 0.2); }
+.toast[hidden] { display: none; }
+
+.about { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding-block: 8px 24px; }
+.about div { display: flex; flex-direction: column; gap: 5px; }
+.about .n { font: 500 11px/1 var(--font-mono); color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+.about p { color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) { .about { grid-template-columns: 1fr; } }
+.foot { font-size: 12.5px; color: var(--muted); padding-bottom: 24px; display: flex; flex-direction: column; gap: 4px; }
+.foot a { color: var(--link); }
+</style>
+</head>
+<body>
+
+<header class="topbar gutter">
+  <div class="inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 9.5-4-1.3-7-5-7-9.5V6l7-3z"/><path d="M8.8 12.2l2.2 2.2 4.2-4.4"/></svg></span>
+      <b>Ads Policy Checker</b>
+    </div>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <span id="crCamp">Sales campaign</span><span class="sep">›</span><span id="crSet">Ad set</span><span class="sep">›</span><span class="now" id="crAd">Ad</span>
+    </nav>
+    <label class="example" for="sample">Example
+      <select id="sample">
+        <option value="weight">Weight-loss supplement</option>
+        <option value="crypto">Crypto trading bot</option>
+        <option value="spanish">Spanish course</option>
+        <option value="coffee">Coffee roaster</option>
+        <option value="blank">Start blank</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<div class="gutter">
+  <div class="inner">
+    <main class="app">
+      <nav class="rail" aria-label="Campaign structure">
+        <a class="step" href="#sec-campaign" data-lvl="campaign">
+          <span class="lvl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg></span>
+          <span><small>Campaign</small><b id="railCamp">Sales campaign</b></span>
+          <i class="badge" id="bd-campaign"></i>
+        </a>
+        <a class="step" href="#sec-adset" data-lvl="adset">
+          <span class="lvl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.7-3.2 3-5 5.5-5s4.8 1.8 5.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.3.2 4 1.8 4.5 4.8"/></svg></span>
+          <span><small>Ad set</small><b id="railSet">Ad set</b></span>
+          <i class="badge" id="bd-adset"></i>
+        </a>
+        <a class="step" href="#sec-ad" data-lvl="ad" aria-current="true">
+          <span class="lvl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 4"/></svg></span>
+          <span><small>Ad</small><b id="railAd">New ad</b></span>
+          <i class="badge" id="bd-ad"></i>
+        </a>
+        <p class="rail-new">Badges show the issues found at each level.</p>
+      </nav>
+
+      <div class="col">
+        <section class="card" id="sec-campaign" aria-labelledby="h-camp">
+          <div class="card-head"><div class="t"><h2 id="h-camp">Campaign</h2></div><span class="help">Objective and category</span></div>
+          <div class="card-body">
+            <div class="row2">
+              <div class="field">
+                <label for="objective">Objective</label>
+                <select id="objective">
+                  <option>Sales</option><option>Traffic</option><option>Leads</option>
+                  <option>Engagement</option><option>App promotion</option><option>Awareness</option>
+                </select>
+              </div>
+              <div class="field" id="f-category">
+                <label for="category">Ad category</label>
+                <select id="category">
+                  <option value="auto">Detect from copy</option>
+                  <option value="general">General</option>
+                  <option value="health">Health and weight loss</option>
+                  <option value="finance">Finance and crypto</option>
+                  <option value="alcohol">Alcohol</option>
+                  <option value="gambling">Gambling</option>
+                  <option value="dating">Dating</option>
+                  <option value="special">Housing, jobs or credit</option>
+                </select>
+              </div>
+            </div>
+            <p class="help" id="catNote"></p>
+          </div>
+        </section>
+
+        <section class="card" id="sec-adset" aria-labelledby="h-set">
+          <div class="card-head"><div class="t"><h2 id="h-set">Ad set</h2></div><span class="help">Audience</span></div>
+          <div class="card-body">
+            <div class="row2">
+              <div class="field" id="f-age">
+                <label for="minAge">Age from</label>
+                <input id="minAge" type="number" min="13" max="65" inputmode="numeric">
+              </div>
+              <div class="field">
+                <label for="maxAge">Age to</label>
+                <select id="maxAge"><option>24</option><option>34</option><option>44</option><option>54</option><option selected>65+</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="location">Locations</label>
+              <input id="location" autocomplete="off">
+            </div>
+            <p class="field-flag" id="flag-age"></p>
+          </div>
+        </section>
+
+        <section class="card" id="sec-ad" aria-labelledby="h-ad">
+          <div class="card-head"><div class="t"><h2 id="h-ad">Ad</h2></div><span class="help" id="adHelp">Ad creative</span></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="brandName">Identity</label>
+              <div class="idrow"><span class="avatar" id="idAvatar" aria-hidden="true">Y</span><input id="brandName" autocomplete="off" placeholder="Page or account name"></div>
+            </div>
+            <div class="field" id="f-body">
+              <div class="lab"><label for="body" id="bLabel">Primary text</label><span class="count" id="bCount"></span></div>
+              <textarea id="body" rows="5"></textarea>
+              <p class="field-flag" id="flag-body"></p>
+            </div>
+            <div class="field" id="f-headline">
+              <div class="lab"><label for="headline" id="hLabel">Headline</label><span class="count" id="hCount"></span></div>
+              <input id="headline" autocomplete="off">
+              <p class="field-flag" id="flag-headline"></p>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="cta">Call to action</label>
+                <select id="cta">
+                  <option>Shop now</option><option>Learn more</option><option>Sign up</option>
+                  <option>Download</option><option>Book now</option><option>Get offer</option>
+                </select>
+              </div>
+              <div class="field" id="f-url">
+                <label for="url">Website URL</label>
+                <input id="url" type="url" autocomplete="off" placeholder="https://">
+              </div>
+            </div>
+            <p class="field-flag" id="flag-url"></p>
+          </div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card" aria-labelledby="h-pv">
+          <div class="card-body">
+            <div class="pv-head">
+              <h3 id="h-pv">Ad preview</h3>
+              <select id="placement" aria-label="Placement">
+                <optgroup label="Meta">
+                  <option value="ig-feed">Instagram Feed</option>
+                  <option value="ig-story">Instagram Stories</option>
+                  <option value="fb-feed">Facebook Feed</option>
+                </optgroup>
+                <optgroup label="Other platforms">
+                  <option value="google">Google Search</option>
+                  <option value="tiktok">TikTok For You</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="stage" id="stage"><div id="preview"></div><p class="stage-note" id="stageNote"></p></div>
+          </div>
+        </section>
+
+        <section class="card" id="sec-review" aria-labelledby="h-rev">
+          <div class="card-body">
+            <h3 id="h-rev">Policy review</h3>
+            <div class="verdict-row">
+              <div class="stamp" id="stamp" aria-live="polite">Likely rejected</div>
+              <div class="score"><b id="score">0</b><small>Approval score out of 100</small></div>
+            </div>
+            <div class="chips" id="chips"></div>
+            <div class="field">
+              <p class="eyebrow">Same ad on each platform</p>
+              <div class="compare" id="compare"></div>
+            </div>
+            <div class="tabs" role="tablist" id="tabs">
+              <button class="tab" role="tab" aria-selected="true" data-tab="issues">Issues <span class="n" id="nIssues">0</span></button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="tips">Tips <span class="n" id="nTips">0</span></button>
+            </div>
+            <ol class="f-list" id="findings"></ol>
+            <a class="jump" id="policyLink" href="#" target="_blank" rel="noopener">Read the full policy</a>
+          </div>
+        </section>
+
+        <section class="card" id="aiPanel" aria-labelledby="h-ai">
+          <div class="card-body">
+            <div class="field">
+              <h3 id="h-ai">Second opinion from Claude</h3>
+              <p class="muted">The rules catch known patterns. Claude reads the ad in context, finds risks the rules missed, and drafts a compliant rewrite you can check again.</p>
+            </div>
+            <div class="ai-actions">
+              <button class="btn" id="aiBtn" disabled>Ask Claude</button>
+              <button class="btn" id="aiStop" hidden>Stop</button>
+              <span class="muted" id="aiStatus">Connecting to Claude…</span>
+            </div>
+            <div class="ai-out" id="aiOut"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <section class="about" aria-label="How it works">
+      <div><span class="n">Step 1 · Rules</span><h3>Checked as you type</h3><p>About 30 rules based on public ad policies cover personal attributes, health and money claims, restricted products, editorial style, length limits, landing pages and age targeting.</p></div>
+      <div><span class="n">Step 2 · Claude</span><h3>Reviewed in context</h3><p>Claude gets the copy and the rule findings, looks for risks the patterns can't see, and writes a version that keeps the selling point.</p></div>
+      <div><span class="n">Step 3 · Recheck</span><h3>Fixed before you spend</h3><p>Apply the rewrite and the rules run again, so you know the ad clears review before it reaches the platform.</p></div>
+    </section>
+    <footer class="foot">
+      <p>A pre-flight check, not a platform decision. Ad policies change often and differ by country, so confirm against the official pages before you spend. Nothing is submitted to any ad platform.</p>
+      <p><a href="https://transparency.meta.com/policies/ad-standards/" target="_blank" rel="noopener">Meta Advertising Standards</a> · <a href="https://support.google.com/adspolicy/answer/6008942" target="_blank" rel="noopener">Google Ads policies</a> · <a href="https://ads.tiktok.com/help/article/tiktok-advertising-policies-ad-creatives-landing-page" target="_blank" rel="noopener">TikTok advertising policies</a></p>
+    </footer>
+  </div>
+</div>
+
+<div class="pubbar gutter">
+  <div class="inner">
+    <div class="pub-status" id="pubStatus"></div>
+    <div class="pub-btns">
+      <button class="btn" id="aiBtn2" type="button" disabled>Ask Claude</button>
+      <button class="btn primary" id="publish" type="button">Publish</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const PLATFORMS = {
+    meta: {
+      short: "Meta",
+      labels: { headline: "Headline", body: "Primary text" },
+      limits: {
+        headline: { n: 40, sev: "tip", msg: "Headlines over 40 characters get cut off in most placements." },
+        body: { n: 125, sev: "tip", msg: "Primary text over 125 characters hides behind \"more\", so the hook may never be read." },
+      },
+      policy: "https://transparency.meta.com/policies/ad-standards/",
+    },
+    google: {
+      short: "Google",
+      labels: { headline: "Headline", body: "Description" },
+      limits: {
+        headline: { n: 30, sev: "block", msg: "Responsive search ad headlines are capped at 30 characters. The ad won't save." },
+        body: { n: 90, sev: "block", msg: "Descriptions are capped at 90 characters. The ad won't save." },
+      },
+      policy: "https://support.google.com/adspolicy/answer/6008942",
+    },
+    tiktok: {
+      short: "TikTok",
+      labels: { headline: "On-screen hook", body: "Ad text" },
+      limits: {
+        body: { n: 100, sev: "block", msg: "TikTok ad text is capped at 100 characters." },
+      },
+      policy: "https://ads.tiktok.com/help/article/tiktok-advertising-policies-ad-creatives-landing-page",
+    },
+  };
+  const PLACEMENTS = {
+    "ig-feed": { platform: "meta", note: "Instagram Feed doesn't show the headline, but reviewers still check it." },
+    "ig-story": { platform: "meta", note: "Stories show the primary text as a caption and hide the headline. Reviewers still check both." },
+    "fb-feed": { platform: "meta", note: "" },
+    "google": { platform: "google", note: "" },
+    "tiktok": { platform: "tiktok", note: "" },
+  };
+  const FIRST_PLACEMENT = { meta: "ig-feed", google: "google", tiktok: "tiktok" };
+  const SEV = {
+    block: { label: "Blocker", rank: 3, weight: 30, color: "var(--block)", icon: "!" },
+    warn: { label: "Warning", rank: 2, weight: 10, color: "var(--warn)", icon: "!" },
+    tip: { label: "Tip", rank: 1, weight: 3, color: "var(--tip)", icon: "i" },
+  };
+  const CATEGORY_NAMES = {
+    general: "General", health: "Health and weight loss", finance: "Finance and crypto", alcohol: "Alcohol",
+    gambling: "Gambling", dating: "Dating", special: "Housing, jobs or credit",
+  };
+  const all = (s) => ({ meta: s, google: s, tiktok: s });
+  const pick = (v, ctx) => typeof v === "function" ? v(ctx) : (v && typeof v === "object" ? (v[ctx.platform] ?? v.default) : v);
+
+  // Pattern rules: each one scans the headline and body.
+  const RULES = [
+    {
+      level: "ad", area: "Personal attributes", title: "Copy implies something personal about the reader",
+      re: /\b(?:are you|do you (?:have|suffer from|feel)|struggling with|tired of being|you(?:'re| are))\s+(?:\w+\s+){0,3}?(?:overweight|fat|obese|depressed|diabetic|anxious|bald(?:ing)?|in debt|broke|single|lonely|pregnant|addicted|infertile|unemployed|divorced|gay|lesbian|christian|muslim|jewish|over \d{2})\b/gi,
+      sev: { meta: "block", google: "warn", tiktok: "warn" },
+      why: { meta: "Meta doesn't allow ads that assert or imply a reader's health, finances, religion, sexual orientation or other personal traits.", default: "Asking readers about their health, money or identity reads as targeting a sensitive trait and is a common reason for rejection." },
+      fix: "Talk about the product, not the reader: \"Meal plans built by dietitians\" instead of \"Are you overweight?\"",
+    },
+    {
+      level: "ad", area: "Unrealistic results", title: "Specific weight-loss promise",
+      re: /\b(?:lose|drop|shed|burn)\s+(?:up to\s+)?\d+\s*(?:lbs?|pounds?|kg|kilos?|sizes?|inches)\b(?:\s+in\s+(?:just\s+)?\d+\s*(?:days?|weeks?|months?))?/gi,
+      sev: all("block"),
+      why: "Claims of a set amount of weight lost, especially in a set time, are treated as unrealistic results on every major platform.",
+      fix: "Describe the method instead: \"High-protein recipes ready in 20 minutes.\"",
+    },
+    {
+      level: "ad", area: "Health claims", title: "Medical cure or miracle claim",
+      re: /\b(?:cures?|heals?|reverses?|eliminates?|prevents?)\s+(?:\w+\s+){0,2}?(?:cancer|diabetes|anxiety|depression|arthritis|covid(?:-19)?|disease|acne|hair loss|insomnia|obesity|high blood pressure)\b|\bmiracle\b/gi,
+      sev: all("block"),
+      why: "Ads can't claim to cure or prevent a condition, or present a product as a miracle. These count as misleading health claims.",
+      fix: "Stick to what the product does and can prove, and leave out conditions.",
+    },
+    {
+      level: "ad", area: "Misleading claims", title: "Guaranteed or risk-free outcome",
+      re: /\b(?:guarantee(?:d|s)?|100% (?:results|success|effective|safe)|risk[- ]free|no risk)\b/gi,
+      sev: (ctx) => (ctx.cat === "health" || ctx.cat === "finance") ? "block" : "warn",
+      why: (ctx) => (ctx.cat === "health" || ctx.cat === "finance")
+        ? "Guaranteed results in health or money ads are treated as deceptive. No product can promise an outcome."
+        : "A guarantee is fine only for something concrete, like a money-back policy, and the landing page has to spell out the terms.",
+      fix: (ctx) => (ctx.cat === "health" || ctx.cat === "finance") ? "Remove the promise and describe the product honestly." : "Say exactly what is guaranteed: \"30-day money-back guarantee.\"",
+    },
+    {
+      level: "ad", area: "Sensational content", title: "Clickbait phrasing",
+      re: /(?:doctors hate|one (?:weird|simple|strange) trick|you won'?t believe|\bshocking\b|what happens next|this changes everything|they don'?t want you to know)/gi,
+      sev: { meta: "warn", google: "block", tiktok: "warn" },
+      why: { google: "Google's misrepresentation policy covers clickbait that hides what is being sold or promises a secret.", default: "Sensational hooks are flagged as engagement bait and lower ad quality, and often lead to manual review." },
+      fix: "Lead with the real benefit in plain words.",
+    },
+    {
+      level: "ad", area: "Health and wellness", title: "Before-and-after framing",
+      re: /\bbefore\s*(?:and|&|\/)\s*after\b/gi,
+      sev: (ctx) => ctx.cat === "health" ? "block" : "warn",
+      why: "Before-and-after comparisons for weight loss, skin and other body results aren't allowed because they imply results readers may not get.",
+      fix: "Show the product in use, or a customer quote about the experience.",
+    },
+    {
+      level: "campaign", area: "Weight-loss products", title: "Weight-loss product",
+      re: /\b(?:weight[- ]loss|diet pills?|fat burners?|appetite suppressants?|slimming (?:tea|pills?)|detox tea|fasting app)\b/gi,
+      sev: { meta: "warn", google: "tip", tiktok: "block" },
+      why: { tiktok: "TikTok doesn't allow ads for weight-loss supplements, fat burners or fasting apps.", meta: "Weight-loss ads must target 18 and over and can't show before-and-after images or shame body types.", google: "Allowed, but claims must be realistic and the landing page must back them up." },
+      fix: { tiktok: "This product can't run on TikTok. Choose another platform.", default: "Keep the audience 18 and over and avoid result claims." },
+    },
+    {
+      level: "ad", area: "Editorial: capitalization", title: "Words in all caps",
+      re: /\b[A-Z]{4,}\b/g,
+      filter: (w) => !["HTTP", "HTTPS", "NASDAQ", "NYSE", "LGBTQ", "COVID", "NATO", "UNESCO", "UNICEF", "IKEA"].includes(w),
+      sev: { meta: "tip", google: "block", tiktok: "tip" },
+      why: { google: "Google rejects gimmicky capitalization such as FREE or BUY NOW. Only acronyms and brand names may be in caps.", default: "Caps read as shouting and lower ad quality scores, even where they're allowed." },
+      fix: "Use sentence case. Put the emphasis in the offer, not the typography.",
+    },
+    {
+      level: "ad", area: "Editorial: punctuation", title: "Repeated punctuation",
+      re: /[!?]{2,}/g,
+      sev: { meta: "tip", google: "block", tiktok: "tip" },
+      why: { google: "Repeated or gimmicky punctuation like !!! or ?! breaks Google's editorial standards.", default: "Strings of punctuation look spammy and are often a sign of low-quality ads to reviewers." },
+      fix: "One punctuation mark is enough.",
+    },
+    {
+      level: "ad", area: "Editorial: punctuation", title: "Exclamation mark in a headline", fields: ["headline"],
+      re: /!/g,
+      sev: { google: "block" },
+      why: "Google Search ads don't allow exclamation marks in headlines.",
+      fix: "Drop the exclamation mark. Move any excitement into the description, once.",
+    },
+    {
+      level: "ad", area: "Editorial: symbols", title: "Emoji in a search ad",
+      re: /\p{Extended_Pictographic}/gu,
+      sev: { google: "block" },
+      why: "Google Search ads don't allow emoji or other nonstandard symbols in ad text.",
+      fix: "Remove the emoji. Use emoji on social placements instead.",
+    },
+    {
+      level: "ad", area: "Editorial: phone numbers", title: "Phone number in the ad text",
+      re: /(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)[\s.-]?)?\b\d{3,4}[\s.-]\d{3,4}(?:[\s.-]\d{2,4})?\b/g,
+      sev: { google: "warn" },
+      why: "Google wants phone numbers in a call asset rather than in the headline or description.",
+      fix: "Add the number as a call asset and remove it from the text.",
+    },
+    {
+      level: "ad", area: "Financial claims", title: "Get-rich or guaranteed-return promise",
+      re: /\b(?:get rich|double your (?:money|investment)|passive income|guaranteed (?:returns?|profits?|income)|\d+% (?:daily |weekly |monthly )?(?:returns?|profits?|roi)|financial freedom|quit your job)\b/gi,
+      sev: all("block"),
+      why: "Promises of quick wealth or fixed returns count as deceptive financial claims on every major platform.",
+      fix: "Describe the product's features and include the risk: \"Automated trading tools. Capital at risk.\"",
+    },
+    {
+      level: "campaign", area: "Restricted: cryptocurrency", title: "Crypto product needs authorization",
+      re: /\b(?:crypto(?:currency)?|bitcoin|btc|ethereum|nfts?|token sale|ico|defi|altcoins?)\b/gi,
+      sev: all("warn"),
+      why: { meta: "Crypto ads need Meta's written permission or a recognized license.", google: "Crypto ads need Google's cryptocurrency certification for each country they run in.", tiktok: "TikTok allows crypto ads only from licensed advertisers in some regions." },
+      fix: "Confirm you hold the license or certification before you submit, and target only the countries it covers.",
+    },
+    {
+      level: "campaign", area: "Restricted: gambling", title: "Gambling content needs authorization",
+      re: /\b(?:casinos?|betting|bet now|sportsbook|poker|slots?|jackpot|roulette|lottery)\b/gi,
+      sev: all("warn"),
+      why: "Real-money gambling ads need prior authorization from the platform and a license in each country they target.",
+      fix: "Apply for gambling authorization and target only licensed countries.",
+    },
+    {
+      level: "campaign", area: "Restricted: alcohol", title: "Alcohol ad",
+      re: /\b(?:beers?|wines?|vodka|whisk(?:e)?y|gin|rum|tequila|cocktails?|liquor|brewery|happy hour)\b/gi,
+      sev: { meta: "tip", google: "tip", tiktok: "warn" },
+      why: { tiktok: "TikTok bans alcohol ads in many countries and restricts them in the rest.", default: "Alcohol ads are allowed in most countries but must target the legal drinking age and can't encourage heavy drinking." },
+      fix: "Set the age to the local legal drinking age and avoid tying alcohol to success, driving or sport.",
+    },
+    {
+      level: "campaign", area: "Prohibited: tobacco and nicotine", title: "Tobacco, vaping or nicotine product",
+      re: /\b(?:vapes?|vaping|e-?cig(?:arette)?s?|cigarettes?|tobacco|nicotine)\b/gi,
+      sev: all("block"),
+      why: "Ads promoting tobacco, e-cigarettes or nicotine products are prohibited.",
+      fix: "Nicotine products can't be advertised. Quit-smoking services may be allowed with restrictions.",
+    },
+    {
+      level: "campaign", area: "Restricted: cannabis and CBD", title: "Cannabis or CBD product",
+      re: /\b(?:cbd|thc|cannabis|marijuana|weed)\b/gi,
+      sev: all("warn"),
+      why: "Cannabis is prohibited and CBD is heavily restricted, often to topical products in a few countries and only with certification.",
+      fix: "Check the platform's CBD rules for your country and product type before you spend.",
+    },
+    {
+      level: "campaign", area: "Prescription drugs", title: "Prescription drug or no-prescription offer",
+      re: /\b(?:xanax|oxycodone|adderall|ozempic|wegovy|semaglutide|viagra|cialis|tramadol|valium|no prescription|prescription[- ]free)\b/gi,
+      sev: all("block"),
+      why: "Prescription medicines can only be advertised by certified pharmacies or providers, and \"no prescription needed\" is never allowed.",
+      fix: "Get certification (for example LegitScript) and send people to a consultation, not a direct sale.",
+    },
+    {
+      level: "ad", area: "Adult content", title: "Sexual or suggestive copy",
+      re: /\b(?:hot singles|singles in your area|hook ?ups?|sexy|nsfw|xxx|nude|onlyfans|sugar (?:daddy|baby)|adult chat)\b/gi,
+      sev: all("block"),
+      why: "Sexually suggestive copy isn't allowed in ads, and dating ads need prior permission and adult-only targeting.",
+      fix: "Keep the copy non-sexual and lead with the product's real features.",
+    },
+    {
+      level: "campaign", area: "Special ad categories", title: "Housing, employment or credit ad",
+      re: /\b(?:apartments?|for rent|rentals?|mortgages?|home loans?|real estate|we'?re hiring|now hiring|job openings?|credit cards?|personal loans?|credit score)\b/gi,
+      sev: { meta: "warn", google: "tip", tiktok: "tip" },
+      why: { meta: "Declare a Special Ad Category. Age, gender and postcode targeting are limited for housing, employment and credit.", default: "Housing, employment and credit ads have restricted targeting in the US and Canada to prevent discrimination." },
+      fix: "Mark the campaign with the right category and use broad targeting.",
+    },
+    {
+      level: "ad", area: "Unsubstantiated claims", title: "Superlative with no proof",
+      re: /(?:#1\b|\bnumber one\b|\bno\.\s?1\b|\bbest in the (?:world|country|industry)\b|\bworld'?s (?:best|first|leading)\b|\bcheapest\b|\blowest price\b)/gi,
+      sev: { meta: "tip", google: "warn", tiktok: "tip" },
+      why: { google: "Google expects claims like \"#1\" or \"cheapest\" to be backed by third-party evidence on the landing page.", default: "Reviewers may ask for proof of superlatives, and unproven ones can be treated as misleading." },
+      fix: "Cite the source (\"Rated 4.8 on Trustpilot\") or drop the claim.",
+    },
+    {
+      level: "ad", area: "Profanity", title: "Profanity",
+      re: /\b(?:fuck\w*|shit\w*|damn|bitch\w*|asshole|ass|crap)\b/gi,
+      sev: { meta: "warn", google: "block", tiktok: "warn" },
+      why: "Profanity and vulgar language break editorial and community standards in ads.",
+      fix: "Swap it for a clean word.",
+    },
+    {
+      level: "ad", area: "Misleading urgency", title: "Scarcity or deadline claim",
+      re: /\b(?:only \d+ (?:left|spots?|remaining|bottles left)|ends (?:tonight|today|in \d+ (?:minutes|hours))|last chance|act now|hurry)\b/gi,
+      sev: all("tip"),
+      why: "Urgency is fine only when it's true. Fake countdowns and invented stock levels count as deceptive practices.",
+      fix: "Keep it only if the deadline or stock is real, and show it on the landing page.",
+    },
+    {
+      level: "ad", area: "Offer terms", title: "\"Free\" offer",
+      re: /\bfree\b/gi,
+      sev: all("tip"),
+      why: "If \"free\" needs a purchase, subscription or card details, the ad has to say so.",
+      fix: "Add the condition: \"First lesson free, no card needed.\"",
+    },
+  ];
+
+  const SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "cutt.ly", "rebrand.ly", "buff.ly", "shorturl.at"];
+  const mk = (sev, level, field, area, title, why, fix) => ({ sev, level, field, area, title, why, fix, hits: [] });
+
+  // Whole-ad checks: length limits, landing page and age targeting.
+  const CHECKS = [
+    (ctx) => {
+      const out = [];
+      const lim = PLATFORMS[ctx.platform].limits;
+      for (const f of ["headline", "body"]) {
+        const L = lim[f];
+        const len = [...ctx[f]].length;
+        if (L && len > L.n) out.push(mk(L.sev, "ad", f, "Length limit", `${PLATFORMS[ctx.platform].labels[f]} is ${len} characters (limit ${L.n})`, L.msg, `Cut ${len - L.n} characters.`));
+      }
+      return out;
+    },
+    (ctx) => {
+      const u = ctx.url.trim();
+      if (!u) return [mk("warn", "ad", "url", "Landing page", "No website URL yet", "Reviewers check the page the ad links to. Claims in the ad must match what the page says and sells.", "Add the URL you plan to use.")];
+      let p;
+      try { p = new URL(/^https?:\/\//i.test(u) ? u : "https://" + u); } catch { p = null; }
+      if (!p || !p.hostname.includes(".")) return [mk("warn", "ad", "url", "Landing page", "That URL doesn't look valid", "The platform needs a working page to review.", "Use a full address such as https://yourbrand.com/offer.")];
+      const out = [];
+      if (/^http:\/\//i.test(u)) out.push(mk("warn", "ad", "url", "Landing page", "Landing page isn't on HTTPS", "Pages without HTTPS often fail review and show browser warnings to visitors.", "Serve the page over HTTPS."));
+      if (SHORTENERS.includes(p.hostname.replace(/^www\./, ""))) out.push(mk(ctx.platform === "google" ? "block" : "warn", "ad", "url", "Destination", "Link shortener hides the real destination", ctx.platform === "google" ? "Google rejects ads whose display URL and destination don't match, which is what a shortener does." : "Reviewers need to see the real domain, and shortened links are a common spam signal.", "Link straight to a page on your own domain."));
+      return out;
+    },
+    (ctx) => {
+      const a = ctx.minAge;
+      if (!a) return [];
+      const adult = (title, why, fix, sev = "block") => [mk(sev, "adset", "age", "Age targeting", title, why, fix)];
+      if (ctx.cat === "health" && a < 18) return adult("Health and weight-loss ads must target 18+", "Weight-loss products, cosmetic procedures and similar health ads may only reach adults.", "Set Age from to 18 or above.", ctx.platform === "google" ? "warn" : "block");
+      if (ctx.cat === "alcohol" && a < 18) return adult("Alcohol ads must target the legal drinking age", "That means 18+ in most countries and 21+ in the US.", "Set Age from to 18, or 21 for the US.");
+      if (ctx.cat === "gambling" && a < 18) return adult("Gambling ads must target adults only", "Gambling ads may only reach adults, and some countries require 21+.", "Set Age from to 18 or above.");
+      if (ctx.cat === "dating" && a < 18) return adult("Dating ads must target adults only", "Dating services may only advertise to people 18 and over.", "Set Age from to 18 or above.");
+      if (ctx.cat === "finance" && a < 18) return adult("Financial and crypto ads should target 18+", "Investment, trading and crypto products are restricted to adults.", "Set Age from to 18 or above.", "warn");
+      return [];
+    },
+  ];
+
+  const DETECT = {
+    health: /\b(?:weight|diet|supplements?|fat|slim\w*|keto|detox|pills?|cure|doctors?|clinic|wellness|burners?|calories)\b/gi,
+    finance: /\b(?:crypto\w*|bitcoin|invest\w*|trad(?:ing|ers?)|stocks?|forex|returns?|income|profits?|roi|wealth)\b/gi,
+    alcohol: /\b(?:beers?|wines?|vodka|whisk(?:e)?y|gin|rum|tequila|cocktails?|liquor|brewery)\b/gi,
+    gambling: /\b(?:casinos?|betting|sportsbook|poker|slots?|jackpot|roulette|lottery)\b/gi,
+    dating: /\b(?:dating|singles|hook ?ups?|matches)\b/gi,
+    special: /\b(?:apartments?|rent|mortgages?|loans?|hiring|jobs?|credit)\b/gi,
+  };
+  function detectCategory(text) {
+    let best = "general", top = 0;
+    for (const [k, re] of Object.entries(DETECT)) {
+      const n = (text.match(re) || []).length;
+      if (n > top) { top = n; best = k; }
+    }
+    return best;
+  }
+
+  function check(ctx) {
+    const findings = [];
+    for (const r of RULES) {
+      const sev = pick(r.sev, ctx);
+      if (!sev) continue;
+      const hits = [];
+      for (const f of r.fields || ["headline", "body"]) {
+        const text = ctx[f];
+        if (!text) continue;
+        r.re.lastIndex = 0;
+        let m;
+        while ((m = r.re.exec(text))) {
+          if (m[0].length === 0) { r.re.lastIndex++; continue; }
+          if (r.filter && !r.filter(m[0])) continue;
+          hits.push({ field: f, start: m.index, end: m.index + m[0].length, text: m[0] });
+        }
+      }
+      if (hits.length) findings.push({ sev, level: r.level, field: r.level === "campaign" ? "category" : hits[0].field, area: r.area, title: r.title, why: pick(r.why, ctx), fix: pick(r.fix, ctx), hits });
+    }
+    for (const c of CHECKS) findings.push(...c(ctx));
+    findings.sort((a, b) => SEV[b.sev].rank - SEV[a.sev].rank);
+    const score = Math.max(0, 100 - findings.reduce((s, f) => s + SEV[f.sev].weight, 0));
+    const has = (s) => findings.some((f) => f.sev === s);
+    const verdict = has("block") ? { key: "block", text: "Likely rejected", color: "var(--block)" }
+      : has("warn") ? { key: "warn", text: "Needs changes", color: "var(--warn)" }
+      : { key: "pass", text: "Ready to submit", color: "var(--pass)" };
+    return { findings, score, verdict };
+  }
+
+  // ---------- UI ----------
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    headline: $("headline"), body: $("body"), url: $("url"), cta: $("cta"), category: $("category"), minAge: $("minAge"),
+    objective: $("objective"), location: $("location"), brandName: $("brandName"), placement: $("placement"),
+  };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const SAMPLES = {
+    weight: { placement: "ig-feed", objective: "Sales", category: "auto", minAge: 16, location: "United Kingdom", brand: "Lumo Slim", cta: "Shop now", url: "http://bit.ly/slim30",
+      headline: "LOSE 30 LBS IN 30 DAYS!!!",
+      body: "Are you overweight? Doctors hate this one trick. Our 100% natural fat burner is GUARANTEED to work. See the before and after photos. Only 3 bottles left! 🔥" },
+    crypto: { placement: "fb-feed", objective: "App promotion", category: "auto", minAge: 18, location: "Portugal, Spain", brand: "Orbit Trade Bot", cta: "Download", url: "https://example-trade.app",
+      headline: "Earn 12% Daily Returns",
+      body: "Bitcoin is the future. Join 50,000 traders making passive income with the world's #1 crypto bot. Get rich before it's too late. Act now." },
+    spanish: { placement: "ig-story", objective: "Leads", category: "auto", minAge: 18, location: "Portugal", brand: "Hola Lisboa", cta: "Sign up", url: "https://example.com/spanish",
+      headline: "Speak Spanish in 3 Months",
+      body: "Live classes with native tutors, four evenings a week. Your first lesson is free." },
+    coffee: { placement: "google", objective: "Sales", category: "auto", minAge: 18, location: "Portugal", brand: "Torra Coffee", cta: "Shop now", url: "https://example.com/coffee",
+      headline: "Fresh Roast, Every Morning",
+      body: "Single-origin beans roasted in Lisbon. Order by 2pm for next-day delivery." },
+    blank: { placement: null, objective: "Sales", category: "auto", minAge: 18, location: "", brand: "", cta: "Learn more", url: "", headline: "", body: "" },
+  };
+
+  const placement = () => els.placement.value;
+  const platformOf = (pl) => PLACEMENTS[pl].platform;
+  function ctxFor(pf) {
+    const headline = els.headline.value, body = els.body.value;
+    const chosen = els.category.value;
+    const cat = chosen === "auto" ? detectCategory(headline + " " + body) : chosen;
+    return {
+      platform: pf, cat, headline, body, cta: els.cta.value, url: els.url.value,
+      minAge: parseInt(els.minAge.value, 10) || 0, objective: els.objective.value, location: els.location.value.trim(),
+      brand: els.brandName.value.trim(),
+    };
+  }
+
+  function highlight(text, hits) {
+    if (!text) return "";
+    const lvl = new Array(text.length).fill(0);
+    const lab = new Array(text.length).fill("");
+    for (const h of hits) {
+      const r = SEV[h.sev].rank;
+      for (let i = h.start; i < h.end; i++) if (r > lvl[i]) { lvl[i] = r; lab[i] = h.title; }
+    }
+    const cls = { 3: "block", 2: "warn", 1: "tip" };
+    let out = "", i = 0;
+    while (i < text.length) {
+      let j = i;
+      while (j < text.length && lvl[j] === lvl[i] && lab[j] === lab[i]) j++;
+      const seg = esc(text.slice(i, j));
+      out += lvl[i] ? `<mark class="hl ${cls[lvl[i]]}" title="${esc(SEV[cls[lvl[i]]].label + ": " + lab[i])}">${seg}</mark>` : seg;
+      i = j;
+    }
+    return out;
+  }
+
+  function domainOf(u) {
+    try { return new URL(/^https?:\/\//i.test(u) ? u : "https://" + u).hostname.replace(/^www\./, ""); } catch { return "yourbrand.com"; }
+  }
+
+  const ICON = {
+    heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+    comment: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12a8 8 0 01-11.6 7.1L4 20l1-4.1A8 8 0 1120 12z"/></svg>',
+    send: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-6.5 18-3.5-7-7-3.5L21 3z"/></svg>',
+    save: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.5L6 21V3z"/></svg>',
+    globe: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-1px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+    thumb: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 11v9H4v-9h3zm0 0l4-8c1.7 0 2.6 1.2 2.3 2.8L12.8 9H19a2 2 0 012 2.3l-1.2 7A2 2 0 0117.8 20H7"/></svg>',
+    chev: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+    up: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 15l6-6 6 6"/></svg>',
+  };
+
+  function renderPreview(ctx, findings) {
+    const hits = { headline: [], body: [] };
+    for (const f of findings) for (const h of f.hits) hits[h.field].push({ ...h, sev: f.sev, title: f.title });
+    const H = highlight(ctx.headline, hits.headline) || '<span class="empty-copy">Headline</span>';
+    const B = highlight(ctx.body, hits.body) || '<span class="empty-copy">Primary text</span>';
+    const brand = esc(ctx.brand || "Your brand");
+    const handle = esc((ctx.brand || "yourbrand").toLowerCase().replace(/[^a-z0-9]+/g, ""));
+    const initial = esc((ctx.brand || "Y").trim().charAt(0).toUpperCase());
+    const dom = esc(ctx.url.trim() ? domainOf(ctx.url.trim()) : "yourbrand.com");
+    const cta = esc(ctx.cta);
+    const pl = placement();
+    let html;
+    if (pl === "ig-feed") {
+      html = `<div class="ad"><div class="ig-top"><span class="avatar ring">${initial}</span><div><b>${handle}</b><small>Sponsored</small></div><span class="dots">···</span></div>
+        <div class="creative">Image or video</div>
+        <div class="ig-cta"><span>${cta}</span>${ICON.chev}</div>
+        <div class="ig-icons">${ICON.heart}${ICON.comment}${ICON.send}<span class="sp"></span>${ICON.save}</div>
+        <p class="ig-cap"><b>${handle}</b> <span class="copy">${B}</span></p></div>`;
+    } else if (pl === "ig-story") {
+      html = `<div class="ad story"><div class="story-screen"><div class="story-bar"><i></i></div>
+        <div class="story-top"><span class="avatar">${initial}</span><div><b>${handle}</b><br><small>Sponsored</small></div></div>
+        <div class="story-mid">Image or video</div>
+        <p class="story-cap copy">${B}</p>
+        <span class="story-cta">${ICON.up}${cta}</span></div></div>`;
+    } else if (pl === "fb-feed") {
+      html = `<div class="ad"><div class="fb-top"><span class="avatar">${initial}</span><div><b>${brand}</b><small>Sponsored · ${ICON.globe}</small></div><span class="dots">···</span></div>
+        <p class="fb-body copy">${B}</p>
+        <div class="creative wide">Image or video</div>
+        <div class="fb-link"><div><small>${dom}</small><b>${H}</b></div><span class="btn-cta">${cta}</span></div>
+        <div class="fb-actions"><span>${ICON.thumb}Like</span><span>Comment</span><span>Share</span></div></div>`;
+    } else if (pl === "google") {
+      html = `<div class="ad gads"><small><b>Sponsored</b></small><div class="g-site"><span class="g-fav"></span><div><b>${brand}</b><small>${dom}</small></div></div><p class="g-head">${H}</p><p class="g-desc">${B}</p></div>`;
+    } else {
+      html = `<div class="ad tt"><div class="tt-screen"><p class="tt-hook">${H}</p><div class="tt-bottom"><b>@${handle}</b><span class="tt-sp">Sponsored</span><p>${B}</p><span class="tt-cta">${cta}</span></div></div></div>`;
+    }
+    $("preview").innerHTML = html;
+    $("stageNote").textContent = PLACEMENTS[pl].note;
+  }
+
+  let activeTab = "issues";
+  function renderFindings(findings, empty) {
+    const fl = $("findings");
+    const issues = findings.filter((f) => f.sev !== "tip");
+    const tips = findings.filter((f) => f.sev === "tip");
+    $("nIssues").textContent = empty ? 0 : issues.length;
+    $("nTips").textContent = empty ? 0 : tips.length;
+    if (empty) { fl.innerHTML = `<li class="clean">Write the primary text and headline, or load an example, to see the review.</li>`; return; }
+    const list = activeTab === "issues" ? issues : tips;
+    if (!list.length) {
+      fl.innerHTML = activeTab === "issues"
+        ? `<li class="clean"><i class="dot" style="--c: var(--pass)"></i>No blockers or warnings for this platform.</li>`
+        : `<li class="clean">No tips for this ad.</li>`;
+      return;
+    }
+    const fieldName = (f) => PLATFORMS[platformOf(placement())].labels[f].toLowerCase();
+    const levelName = { campaign: "Campaign", adset: "Ad set", ad: "Ad" };
+    fl.innerHTML = list.map((f, i) => {
+      const seen = new Set();
+      const quotes = f.hits.filter((h) => { const k = h.field + "|" + h.text.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+        .map((h) => `<span class="quote"><em>${esc(fieldName(h.field))}:</em> “${esc(h.text)}”</span>`).join("");
+      return `<li class="f-item" style="--c: ${SEV[f.sev].color}"><span class="f-ico" aria-hidden="true">${SEV[f.sev].icon}</span><div class="f-body">
+        <div class="f-meta"><span class="sev">${SEV[f.sev].label}</span><span class="area">${levelName[f.level]} · ${esc(f.area)}</span></div>
+        <p class="f-title">${esc(f.title)}</p>
+        ${quotes ? `<div class="quotes">${quotes}</div>` : ""}
+        <p class="why">${esc(f.why)}</p>
+        <p class="fix"><b>Fix:</b> ${esc(f.fix)}</p>
+        <button class="jump" type="button" data-field="${esc(f.field)}">Edit ${levelName[f.level].toLowerCase()} →</button>
+      </div></li>`;
+    }).join("");
+  }
+
+  const FIELD_EL = { headline: "headline", body: "body", url: "url", age: "minAge", category: "category" };
+  $("findings").addEventListener("click", (e) => {
+    const b = e.target.closest(".jump");
+    if (!b) return;
+    const el = $(FIELD_EL[b.dataset.field] || "body");
+    el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  });
+  $("tabs").addEventListener("click", (e) => {
+    const t = e.target.closest(".tab");
+    if (!t) return;
+    activeTab = t.dataset.tab;
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+    run();
+  });
+
+  function setBadge(level, list) {
+    const b = $("bd-" + level);
+    const mine = list.filter((f) => f.level === level && f.sev !== "tip");
+    if (!mine.length) { b.className = "badge ok"; b.textContent = "✓"; b.title = "No issues"; b.style.removeProperty("--c"); return; }
+    const worst = mine.some((f) => f.sev === "block") ? "block" : "warn";
+    b.className = "badge";
+    b.style.setProperty("--c", SEV[worst].color);
+    b.textContent = mine.length;
+    b.title = `${mine.length} issue${mine.length === 1 ? "" : "s"}`;
+  }
+
+  function flagFields(findings) {
+    const byField = {};
+    for (const f of findings) {
+      if (f.sev === "tip") continue;
+      for (const k of new Set([f.field, ...f.hits.map((h) => h.field)])) (byField[k] ||= []).push(f);
+    }
+    const map = { headline: ["f-headline", "flag-headline"], body: ["f-body", "flag-body"], url: ["f-url", "flag-url"], age: ["f-age", "flag-age"], category: ["f-category", null] };
+    for (const [k, [wrap, flag]] of Object.entries(map)) {
+      const list = byField[k] || [];
+      const worst = list.some((f) => f.sev === "block") ? "block" : list.length ? "warn" : null;
+      $(wrap).classList.toggle("has-block", worst === "block");
+      $(wrap).classList.toggle("has-warn", worst === "warn");
+      if (flag) {
+        const el = $(flag);
+        el.style.setProperty("--c", worst ? SEV[worst].color : "var(--muted)");
+        el.textContent = list.length ? `${list.length} ${list.length === 1 ? "issue" : "issues"}: ${list.slice(0, 2).map((f) => f.title).join("; ")}${list.length > 2 ? "…" : ""}` : "";
+      }
+    }
+  }
+
+  let lastVerdict = "";
+  let lastResult = null;
+  function run() {
+    const pl = placement();
+    const pf = platformOf(pl);
+    const P = PLATFORMS[pf];
+    $("hLabel").textContent = P.labels.headline;
+    $("bLabel").textContent = P.labels.body;
+    $("adHelp").textContent = `Creative for ${els.placement.selectedOptions[0].textContent}`;
+    for (const [f, id] of [["headline", "hCount"], ["body", "bCount"]]) {
+      const len = [...els[f].value].length;
+      const L = P.limits[f];
+      $(id).textContent = L ? `${len} / ${L.n}` : `${len}`;
+      $(id).classList.toggle("over", !!L && len > L.n);
+    }
+    $("policyLink").href = P.policy;
+    $("policyLink").textContent = `Read the full ${P.short} policy →`;
+
+    const ctx = ctxFor(pf);
+    const res = check(ctx);
+    lastResult = { ctx, res };
+    const empty = !ctx.headline.trim() && !ctx.body.trim();
+    const findings = empty ? [] : res.findings;
+
+    // Names in the tree and breadcrumb
+    const campName = `${ctx.objective} campaign`;
+    const setName = `${ctx.location || "All locations"} · ${ctx.minAge || 18}–${$("maxAge").value}`;
+    const adName = ctx.headline.trim() || "New ad";
+    $("railCamp").textContent = $("crCamp").textContent = campName;
+    $("railSet").textContent = $("crSet").textContent = setName;
+    $("railAd").textContent = $("crAd").textContent = adName;
+    $("idAvatar").textContent = (ctx.brand || "Y").charAt(0).toUpperCase();
+    $("catNote").textContent = els.category.value === "auto"
+      ? `Detected from the copy: ${CATEGORY_NAMES[ctx.cat]}.`
+      : `Rules for ${CATEGORY_NAMES[ctx.cat]} apply.`;
+    for (const l of ["campaign", "adset", "ad"]) setBadge(l, findings);
+    flagFields(findings);
+
+    const stamp = $("stamp");
+    const vText = empty ? "Waiting for copy" : res.verdict.text;
+    stamp.textContent = vText;
+    stamp.style.setProperty("--v", empty ? "var(--muted)" : res.verdict.color);
+    if (vText !== lastVerdict) { stamp.classList.remove("thunk"); void stamp.offsetWidth; stamp.classList.add("thunk"); lastVerdict = vText; }
+    $("score").textContent = empty ? "–" : res.score;
+
+    const n = (s) => findings.filter((f) => f.sev === s).length;
+    $("chips").innerHTML = ["block", "warn", "tip"].map((s) => `<span class="chip"><i class="dot" style="--c: ${SEV[s].color}"></i>${n(s)} ${SEV[s].label.toLowerCase()}${n(s) === 1 ? "" : "s"}</span>`).join("");
+
+    $("compare").innerHTML = Object.keys(PLATFORMS).map((k) => {
+      const r = k === pf ? res : check(ctxFor(k));
+      const color = empty ? "var(--muted)" : r.verdict.color;
+      return `<button type="button" class="cmp" data-pf="${k}" aria-pressed="${k === pf}" style="--v: ${color}"><small>${PLATFORMS[k].short}</small><span><i class="dot" style="--c: ${color}"></i>${empty ? "No copy" : r.verdict.text}</span></button>`;
+    }).join("");
+
+    renderPreview(ctx, findings);
+    renderFindings(findings, empty);
+
+    const nb = n("block"), nw = n("warn");
+    $("pubStatus").innerHTML = empty
+      ? `<span class="muted">Add ad copy to run the review.</span>`
+      : `<i class="dot" style="--c: ${res.verdict.color}"></i><span><b>${esc(res.verdict.text)}.</b> <span class="muted">${nb} blocker${nb === 1 ? "" : "s"} and ${nw} warning${nw === 1 ? "" : "s"} on ${P.short}.</span></span>`;
+    const aiOff = !sampleFn || empty || aiBusy;
+    $("aiBtn").disabled = aiOff;
+    $("aiBtn2").disabled = aiOff;
+  }
+
+  let timer;
+  const schedule = () => { clearTimeout(timer); timer = setTimeout(run, 120); };
+  for (const id of ["headline", "body", "url", "minAge", "location", "brandName"]) els[id].addEventListener("input", schedule);
+  for (const id of ["cta", "category", "objective", "placement"]) els[id].addEventListener("change", run);
+  $("maxAge").addEventListener("change", run);
+  $("compare").addEventListener("click", (e) => {
+    const b = e.target.closest(".cmp");
+    if (!b) return;
+    if (platformOf(placement()) !== b.dataset.pf) els.placement.value = FIRST_PLACEMENT[b.dataset.pf];
+    run();
+  });
+
+  // Rail highlights the section in view
+  const steps = [...document.querySelectorAll(".step")];
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) if (en.isIntersecting) {
+      const lvl = { "sec-campaign": "campaign", "sec-adset": "adset", "sec-ad": "ad" }[en.target.id];
+      steps.forEach((s) => s.setAttribute("aria-current", String(s.dataset.lvl === lvl)));
+    }
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  ["sec-campaign", "sec-adset", "sec-ad"].forEach((id) => io.observe($(id)));
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 3600);
+  }
+  $("publish").addEventListener("click", () => {
+    if (!lastResult) return;
+    const { res, ctx } = lastResult;
+    if (!ctx.headline.trim() && !ctx.body.trim()) { toast("Add ad copy first."); return; }
+    const nb = res.findings.filter((f) => f.sev === "block").length;
+    if (nb) {
+      toast(`Fix ${nb} blocker${nb === 1 ? "" : "s"} before publishing.`);
+      activeTab = "issues";
+      document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.tab === "issues")));
+      run();
+      $("sec-review").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      return;
+    }
+    toast(res.verdict.key === "pass" ? "This ad clears every rule. Nothing was submitted to any platform." : "No blockers. Review the warnings, then submit on the platform.");
+  });
+
+  function loadSample(key) {
+    const s = SAMPLES[key];
+    if (s.placement) els.placement.value = s.placement;
+    els.objective.value = s.objective;
+    els.category.value = s.category;
+    els.minAge.value = s.minAge;
+    els.location.value = s.location;
+    els.brandName.value = s.brand;
+    els.cta.value = s.cta;
+    els.url.value = s.url;
+    els.headline.value = s.headline;
+    els.body.value = s.body;
+    $("aiOut").innerHTML = "";
+    run();
+  }
+  $("sample").addEventListener("change", (e) => loadSample(e.target.value));
+
+  // ---------- Claude second opinion ----------
+  let sampleFn = null, aiBusy = false, aiCtl = null;
+  const aiStatus = (t) => { $("aiStatus").textContent = t; };
+  const ERR = {
+    rate_limited: "Too many requests right now. Try again in a minute.",
+    refused: "Claude declined to review this copy. Edit the ad and try again.",
+    invalid_json: "Claude's answer came back in the wrong format. Try again.",
+    session_expired: "Sign in to Claude again, then retry.",
+    empty_completion: "Claude returned nothing. Try again with shorter copy.",
+    prompt_too_large: "The ad is too long to review. Shorten it and try again.",
+    cancelled: "Stopped.",
+  };
+  const HIDE = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+
+  function limitText(pf) {
+    const L = PLATFORMS[pf].limits, lb = PLATFORMS[pf].labels;
+    const parts = Object.entries(L).map(([f, v]) => `${lb[f]} at most ${v.n} characters`);
+    return parts.length ? parts.join("; ") : "No hard limits";
+  }
+
+  async function askClaude() {
+    if (!sampleFn || !lastResult) return;
+    const { ctx, res } = lastResult;
+    const P = PLATFORMS[ctx.platform];
+    const placeName = els.placement.selectedOptions[0].textContent;
+    const flagged = res.findings.map((f) => `- [${SEV[f.sev].label}] ${f.title}${f.hits.length ? ": " + [...new Set(f.hits.map((h) => `"${h.text}"`))].join(", ") : ""}`).join("\n") || "- Nothing flagged";
+    const prompt = `You are an experienced ad reviewer checking a draft ad against ${P.short === "Google" ? "Google Search" : P.short} advertising policies before it is submitted.
+
+Ad:
+- Placement: ${placeName}
+- Objective: ${ctx.objective}
+- Category: ${CATEGORY_NAMES[ctx.cat]}
+- Audience: ages ${ctx.minAge || "not set"} to ${$("maxAge").value}, ${ctx.location || "no location set"}
+- Advertiser name: ${ctx.brand || "(not set)"}
+- ${P.labels.headline}: ${ctx.headline || "(empty)"}
+- ${P.labels.body}: ${ctx.body || "(empty)"}
+- Call to action: ${ctx.cta}
+- Website: ${ctx.url || "(none)"}
+
+A rules engine already flagged:
+${flagged}
+
+Tasks:
+1. Find up to 4 policy risks the rules missed: implied claims, context, tone, targeting, or what the landing page will need to show. Do not repeat items already flagged.
+2. Write one compliant rewrite of the ${P.labels.headline.toLowerCase()} and ${P.labels.body.toLowerCase()} that keeps the real selling point. Limits: ${limitText(ctx.platform)}. Use sentence case, no emoji, no exclamation marks in the headline.
+
+Reply with only JSON in this shape:
+{"summary": "one or two plain sentences on the overall risk", "extraIssues": [{"severity": "block" | "warn" | "tip", "policy": "short policy area", "quote": "exact words from the ad, or empty", "why": "one sentence"}], "rewrite": {"headline": "...", "body": "..."}}`;
+
+    aiBusy = true;
+    aiCtl = new AbortController();
+    $("aiBtn").disabled = true;
+    $("aiBtn2").disabled = true;
+    $("aiStop").hidden = false;
+    $("aiOut").innerHTML = "";
+    aiStatus("Thinking… this can take up to a minute.");
+    $("aiPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+    try {
+      const data = await sampleFn.json(prompt, { signal: aiCtl.signal });
+      renderAI(data, ctx.platform);
+      aiStatus(`Reviewed for ${placeName}.`);
+    } catch (e) {
+      if (HIDE.includes(e && e.code)) {
+        sampleFn = null;
+        aiStatus("Claude isn't available in this view, so only the rules engine runs.");
+      } else {
+        aiStatus(ERR[e && e.code] || "Couldn't reach Claude. Try again.");
+      }
+    } finally {
+      aiBusy = false;
+      $("aiStop").hidden = true;
+      const off = !sampleFn || (!els.headline.value.trim() && !els.body.value.trim());
+      $("aiBtn").disabled = off;
+      $("aiBtn2").disabled = off;
+    }
+  }
+
+  function renderAI(data, pf) {
+    const issues = Array.isArray(data && data.extraIssues) ? data.extraIssues.filter((x) => x && typeof x === "object") : [];
+    const rw = data && data.rewrite && typeof data.rewrite === "object" ? data.rewrite : null;
+    const sevKey = (s) => (SEV[s] ? s : "tip");
+    let html = "";
+    if (data && typeof data.summary === "string") html += `<p>${esc(data.summary)}</p>`;
+    if (issues.length) {
+      html += `<ol class="f-list">` + issues.map((x) => {
+        const s = sevKey(x.severity);
+        return `<li class="f-item" style="--c: ${SEV[s].color}"><span class="f-ico" aria-hidden="true">${SEV[s].icon}</span><div class="f-body">
+          <div class="f-meta"><span class="sev">${SEV[s].label}</span><span class="area">${esc(x.policy || "Policy")}</span></div>
+          ${x.quote ? `<div class="quotes"><span class="quote">“${esc(x.quote)}”</span></div>` : ""}
+          <p class="why">${esc(x.why || "")}</p></div></li>`;
+      }).join("") + `</ol>`;
+    } else {
+      html += `<p class="muted">Claude found nothing beyond what the rules flagged.</p>`;
+    }
+    if (rw && (typeof rw.headline === "string" || typeof rw.body === "string")) {
+      const L = PLATFORMS[pf].labels;
+      html += `<div class="rewrite"><span class="lbl">Suggested rewrite</span>
+        <span class="lbl">${esc(L.headline)}</span><p><b>${esc(rw.headline || "")}</b></p>
+        <span class="lbl">${esc(L.body)}</span><p>${esc(rw.body || "")}</p>
+        <div><button class="btn primary" id="applyRw" type="button">Use this rewrite and check again</button></div></div>`;
+    }
+    $("aiOut").innerHTML = html;
+    const btn = $("applyRw");
+    if (btn) btn.addEventListener("click", () => {
+      if (typeof rw.headline === "string") els.headline.value = rw.headline;
+      if (typeof rw.body === "string") els.body.value = rw.body;
+      run();
+      aiStatus("Rewrite applied. The rules have run again.");
+      $("sec-review").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    });
+  }
+
+  $("aiBtn").addEventListener("click", askClaude);
+  $("aiBtn2").addEventListener("click", askClaude);
+  $("aiStop").addEventListener("click", () => aiCtl && aiCtl.abort());
+
+  loadSample("weight");
+
+  (async () => {
+    try {
+      sampleFn = window.claude && typeof window.claude.use === "function" ? await window.claude.use("sample") : null;
+    } catch { sampleFn = null; }
+    aiStatus(sampleFn ? "Sends the ad and the rule findings to Claude." : "Open this page in Claude to get an AI second opinion. The rules engine works everywhere.");
+    const off = !sampleFn || (!els.headline.value.trim() && !els.body.value.trim());
+    $("aiBtn").disabled = off;
+    $("aiBtn2").disabled = off;
+  })();
+})();
+</script>
+</body>
+</html>
