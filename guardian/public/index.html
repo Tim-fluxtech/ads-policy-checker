@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guardian Compliance Checker</title>
+  <meta name="description" content="Check Facebook ads against Meta's Advertising Standards before you launch. Pass/fail report for every policy area, and compliant copy suggestions for grey-area niches.">
+  <meta name="theme-color" content="#F4EFF3">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- floating nav -->
+  <header class="nav-wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="logo" href="#top" aria-label="Guardian home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.4 5.1 13.6 12 15 6.9-1.4 12-7.6 12-15V7L16 2Z" fill="var(--ink)"/><path d="m10.5 16.2 3.6 3.6 7.6-7.8" fill="none" stroke="var(--pink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><b>Guardian</b><small>Compliance for Facebook ads</small></span>
+      </a>
+      <div class="nav-links">
+        <a href="#check">Checker</a>
+        <a href="#recovery">Account recovery</a>
+        <a href="#agency">Agency</a>
+        <a href="#playbooks">Playbooks</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a class="btn btn-soft nav-cta" href="#check">Check an ad free</a>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <h1>Facebook ad compliance, checked before you spend.</h1>
+        <p class="lede">Paste your copy, add your creative and get a pass/fail report against Meta's Advertising Standards in seconds, with safer copy suggestions that keep your offer. Built for grey-area niches.</p>
+        <div class="hero-cta">
+          <a class="btn btn-pink btn-lg" href="#check">Run a free check <span data-ic="arrow-right"></span></a>
+          <a class="btn btn-ghost btn-lg" href="#playbooks">See grey-area playbooks</a>
+        </div>
+        <p class="hero-note"><span data-ic="shield-check"></span><span>Rules checked against Meta&rsquo;s public policy pages on <span class="vdate"></span>. No Meta login needed.</span></p>
+      </div>
+
+      <div class="flow" aria-hidden="true">
+        <div class="flow-top">
+          <div class="flow-card"><small>Platform</small><span class="flow-plat"><span class="fb-dot">f</span>Facebook</span><span class="flow-sub">Feed · Stories · Reels</span></div>
+          <div class="flow-card flow-creative"><small>Creative</small><img id="flowImg" alt=""></div>
+          <div class="flow-card"><small>Check type</small><span class="flow-plat"><span data-ic="shield-check"></span>Meta policy</span><span class="flow-sub">+ claims &amp; targeting</span></div>
+        </div>
+        <svg class="flow-lines" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M70 0v20h130v40M200 0v60M330 0v20H200"/></svg>
+        <div class="flow-btn"><span>Compliance check</span><span class="cursor" data-ic="mouse-pointer-click"></span></div>
+        <svg class="flow-lines short" viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M200 0v40"/></svg>
+        <div class="flow-result">
+          <div class="flow-result-h">Compliance report</div>
+          <div class="flow-result-b">
+            <div class="flow-shot"><img id="flowShot" alt=""><span class="scan"></span></div>
+            <div class="flow-checks">
+              <div class="fc"><div class="fc-h"><b>Personal attributes</b><span class="chip-fail">Failed</span></div><p>"Are you overweight?" implies the reader's health. Meta doesn't allow this.</p></div>
+              <div class="fc"><div class="fc-h"><b>Offer transparency</b><span class="chip-pass">Passed</span></div><p>The 20% discount is shown on the landing page too.</p></div>
+              <div class="fc"><div class="fc-h"><b>Suggested copy</b><span class="chip-pink">3 options</span></div><p>"Small steps, done consistently. Results vary."</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap trustbar">
+      <span>Covers every Meta Advertising Standards area that copy can break</span>
+      <div class="marquee"><div class="marquee-in" id="marquee"></div></div>
+    </div>
+
+    <!-- CHECKER -->
+    <section class="wrap" id="check">
+      <div class="panel checker">
+        <div class="checker-h">
+          <div>
+            <p class="eyebrow">Compliance checker</p>
+            <h2>Check a Facebook ad in seconds</h2>
+          </div>
+          <div class="samples">
+            <span>Try an example</span>
+            <div class="sample-list" id="sampleList"></div>
+          </div>
+        </div>
+
+        <div class="checker-grid">
+          <!-- INPUTS -->
+          <form class="inputs" id="editor" autocomplete="off" novalidate>
+            <div class="step-h"><span class="num">1</span><b>Your ad</b></div>
+
+            <div class="creative-drop" id="drop">
+              <input id="files" type="file" accept="image/*" multiple hidden>
+              <div class="cd-img" id="cdImg"></div>
+              <div class="cd-meta">
+                <b>Creative</b>
+                <span id="cdText">Upload a 1:1 image. We read the text inside it too.</span>
+                <span class="cd-acts"><label class="btn btn-ghost btn-sm" for="files"><span data-ic="upload"></span>Upload image</label><button type="button" class="link" id="cdRemove" hidden>Remove</button></span>
+              </div>
+            </div>
+            <div class="notes" data-notes="creative"></div>
+
+            <label class="field" data-field="brand"><span class="lbl">Facebook Page name</span><input id="brand" type="text" maxlength="60" placeholder="Your Page name"></label>
+
+            <div class="field" data-field="primary">
+              <label class="lbl" for="primary">Primary text <i class="count" data-for="primary" data-max="125"></i></label>
+              <div class="hl"><div class="hl-back" aria-hidden="true"></div><textarea id="primary" placeholder="Tell people what your ad is about"></textarea></div>
+              <span class="notes"></span>
+            </div>
+            <div class="row-2">
+              <div class="field" data-field="headline">
+                <label class="lbl" for="headline">Headline <i class="count" data-for="headline" data-max="40"></i></label>
+                <div class="hl hl-line"><div class="hl-back" aria-hidden="true"></div><input id="headline" type="text" maxlength="255" placeholder="Short headline"></div>
+                <span class="notes"></span>
+              </div>
+              <div class="field" data-field="description">
+                <label class="lbl" for="description">Description <i class="count" data-for="description" data-max="30"></i></label>
+                <div class="hl hl-line"><div class="hl-back" aria-hidden="true"></div><input id="description" type="text" maxlength="255" placeholder="Optional"></div>
+                <span class="notes"></span>
+              </div>
+            </div>
+            <div class="row-2">
+              <label class="field" data-field="cta"><span class="lbl">Call to action</span>
+                <select id="cta"><option>Learn more</option><option>Shop now</option><option>Sign up</option><option>Book now</option><option>Get offer</option><option>Download</option><option>Apply now</option><option>Contact us</option><option>Subscribe</option><option>Get quote</option></select>
+              </label>
+              <div class="field" data-field="url"><label class="lbl" for="url">Website URL</label><input id="url" type="url" inputmode="url" placeholder="https://yourbrand.com/offer"><span class="notes"></span></div>
+            </div>
+
+            <details class="targeting" id="targeting">
+              <summary><span data-ic="target"></span><b>Targeting &amp; category</b><small id="tgtSum"></small></summary>
+              <div class="tgt-body">
+                <label class="field" data-field="niche"><span class="lbl">Category</span><select id="niche"></select><span class="help" id="nicheHelp"></span><span class="notes"></span></label>
+                <div class="field" data-field="countries">
+                  <span class="lbl" id="locLbl">Locations</span>
+                  <div class="tags" id="countryTags" aria-labelledby="locLbl"><input id="countryInput" list="countryList" placeholder="Add a country" aria-label="Add a location"></div>
+                  <datalist id="countryList"></datalist>
+                  <span class="notes"></span>
+                </div>
+                <div class="row-2">
+                  <label class="field" data-field="age"><span class="lbl">Minimum age</span><select id="minAge"></select><span class="notes"></span></label>
+                  <label class="field" data-field="sac"><span class="lbl">Special Ad Category</span>
+                    <select id="sac"><option value="none">None</option><option value="financial">Financial products and services</option><option value="employment">Employment</option><option value="housing">Housing</option><option value="siep">Social issues, elections or politics</option></select><span class="notes"></span>
+                  </label>
+                </div>
+                <label class="check" data-field="authorised"><input id="authorised" type="checkbox"><span>I have Meta's authorisation or licence for this category (crypto, gambling, dating, CBD, prescription)</span></label>
+              </div>
+            </details>
+
+            <button type="button" class="btn btn-pink btn-lg btn-block" id="runBtn"><span data-ic="shield-check"></span>Run compliance check</button>
+            <p class="fine">A risk estimate, not Meta's decision. Approval isn't guaranteed.</p>
+          </form>
+
+          <!-- REPORT -->
+          <section class="report" id="report" aria-live="polite">
+            <div class="step-h"><span class="num">2</span><b>Compliance report</b><span id="liveTag" class="live-tag" hidden><span class="dot"></span>Live</span></div>
+            <div id="reportBody"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="wrap" id="features">
+      <div class="panel feature">
+        <div class="f-copy">
+          <p class="eyebrow">Built for grey-area niches</p>
+          <h2>Restricted doesn't mean banned</h2>
+          <p>Weight loss, supplements, crypto, dating, coaching: most "grey" niches can run on Facebook with the right targeting, permission and wording. Guardian knows the difference between a restricted product and a rejected sentence.</p>
+          <ul class="ticks"><li>Category rules for 16 niches, sourced from Meta's policy pages</li><li>Age and country limits checked automatically (21+ alcohol in the US, CBD in the US only)</li><li>Prohibited products are refused, never disguised</li></ul>
+          <a class="btn btn-pink" href="#playbooks">Browse playbooks <span data-ic="arrow-right"></span></a>
+        </div>
+        <div class="f-visual">
+          <div class="tabs-pill" id="fTabs1"></div>
+          <div class="mock" id="fMock1"></div>
+        </div>
+      </div>
+
+      <div class="panel feature reverse">
+        <div class="f-copy">
+          <p class="eyebrow">Copy suggestions that keep your offer</p>
+          <h2>Fix the sentence, not the strategy</h2>
+          <p>Every flagged line gets three safer alternatives, and every ad gets complete rewrites from angles that pass review in its niche. Each suggestion is re-checked before you see it.</p>
+          <ul class="ticks"><li>Light-touch edits that keep your voice</li><li>Routine, product-first, social-proof and education angles</li><li>Optional AI rewrites in your tone, checked by the same rules</li></ul>
+          <a class="btn btn-pink" href="#check">Try it on your ad <span data-ic="arrow-right"></span></a>
+        </div>
+        <div class="f-visual">
+          <div class="tabs-pill" id="fTabs2"></div>
+          <div class="mock" id="fMock2"></div>
+        </div>
+      </div>
+
+      <div class="panel feature">
+        <div class="f-copy">
+          <p class="eyebrow">More than the words</p>
+          <h2>Targeting, landing page and creative too</h2>
+          <p>Ads get rejected for what surrounds the copy as well: an under-18 audience for a supplement, a link shortener, a discount that isn't on the page, text baked into the image. Guardian checks those and fixes the simple ones in one click.</p>
+          <ul class="ticks"><li>One-click fixes: set age to 18+, remove unsupported countries, declare a Special Ad Category</li><li>Landing page scan: loads, privacy policy, contact details, matching offers</li><li>Text inside images read and checked</li></ul>
+          <a class="btn btn-pink" href="#check">Run a check <span data-ic="arrow-right"></span></a>
+        </div>
+        <div class="f-visual">
+          <div class="mock mock-tgt" id="fMock3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECOVERY -->
+    <section class="wrap" id="recovery">
+      <div class="panel recovery">
+        <div class="rec-copy">
+          <p class="eyebrow">Business Manager &amp; ad account recovery</p>
+          <h2>Locked out? Get a clear way back in.</h2>
+          <p>Business Managers and ad accounts get restricted overnight, usually by automated systems, and there's rarely a person at Meta to ask. Guardian works out exactly what's restricted, shows you the official route for your case, and helps you write a calm, factual appeal.</p>
+          <ul class="ticks">
+            <li>Free diagnosis: find out your case type in under a minute</li>
+            <li>Step-by-step official route, with a document checklist for your country</li>
+            <li>Appeal drafts that use only the facts you give us</li>
+            <li>Case tracker with appeal dates and reminders</li>
+            <li>Chat with a human rep, or book a call for Business Manager, ad account, hacked-admin and recommendation issues</li>
+          </ul>
+          <div class="rec-rules">
+            <span><span data-ic="lock"></span>We never ask for your password or 2FA codes</span>
+            <span><span data-ic="shield-check"></span>Meta's own channels only. No "insiders"</span>
+            <span><span data-ic="ban"></span>No new or rented accounts, no VPN tricks</span>
+          </div>
+        </div>
+        <div class="rec-visual">
+          <div class="wizard" id="wizard" aria-live="polite"></div>
+          <p class="fine">Independent service, not affiliated with Meta. We can't guarantee reinstatement; we help you use Meta's process properly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENCY -->
+    <section class="wrap" id="agency">
+      <div class="panel agency">
+        <div class="ag-top">
+          <div class="ag-copy">
+            <span class="ag-brand"><span class="ag-logo" data-ic="chart-line"></span>Guardian Growth <small>done-for-you Facebook ads</small></span>
+            <h2>Ads that make money, on an account that stays safe.</h2>
+            <p>For founders, small businesses and solo brands who want ads run like a good agency runs them, without agency overheads. We plan, write, launch and scale your Facebook campaigns around one number: the profit left after ad spend.</p>
+            <div class="ag-pillars">
+              <div><span data-ic="chart-line"></span><b>Profit first</b><small>We manage to your break-even cost per sale, not to clicks or likes.</small></div>
+              <div><span data-ic="shield-check"></span><b>Compliance built in</b><small>Every ad passes Guardian's checks before it spends a cent.</small></div>
+              <div><span data-ic="eye"></span><b>Plain-English reports</b><small>Spend, sales, margin and profit every week. No vanity metrics.</small></div>
+              <div><span data-ic="lock"></span><b>You own everything</b><small>Your ad account, pixel and data. We work through partner access, never your login.</small></div>
+            </div>
+            <div class="hero-cta">
+              <button type="button" class="btn btn-pink btn-lg" data-lead="agency">Book a free profit audit <span data-ic="arrow-right"></span></button>
+              <a class="btn btn-ghost-dark btn-lg" href="#calc">Run your numbers</a>
+            </div>
+          </div>
+
+          <div class="calc" id="calc">
+            <div class="calc-h"><b>Profit calculator</b><small>What does a sale need to cost for ads to pay?</small></div>
+            <label class="cf"><span>Average order value</span><span class="cf-in"><i>€</i><input type="number" id="cAov" value="60" min="1" step="1"></span><input type="range" id="rAov" min="10" max="500" value="60"></label>
+            <label class="cf"><span>Product, shipping &amp; fees per order</span><span class="cf-in"><i>€</i><input type="number" id="cCost" value="22" min="0" step="1"></span><input type="range" id="rCost" min="0" max="400" value="22"></label>
+            <label class="cf"><span>Cost per sale from ads (CPA)</span><span class="cf-in"><i>€</i><input type="number" id="cCpa" value="25" min="1" step="1"></span><input type="range" id="rCpa" min="1" max="300" value="25"></label>
+            <label class="cf"><span>Monthly ad budget</span><span class="cf-in"><i>€</i><input type="number" id="cBudget" value="2000" min="100" step="50"></span><input type="range" id="rBudget" min="300" max="30000" step="100" value="2000"></label>
+            <div class="calc-out" id="calcOut"></div>
+          </div>
+        </div>
+
+        <div class="ag-steps">
+          <div><span class="n">01</span><b>Free profit audit</b><small>Your margins, offer, current ads and account health. You get the numbers, whether or not you hire us.</small></div>
+          <div><span class="n">02</span><b>30-day test plan</b><small>Compliant creatives and audiences tested against your break-even cost per sale.</small></div>
+          <div><span class="n">03</span><b>Scale what's profitable</b><small>Budget moves to the ads that make money. Losers get cut fast.</small></div>
+          <div><span class="n">04</span><b>Monthly profit review</b><small>What worked, what we spent, what you kept, and the plan for next month.</small></div>
+        </div>
+
+        <div class="ag-tiers">
+          <article><h3>Launch</h3><p class="for">First ads or a fresh start</p><ul><li>Offer and margin audit</li><li>Account setup and health check</li><li>6 compliant creatives a month</li><li>1 campaign, weekly report</li></ul><small>For budgets up to €3k/month</small></article>
+          <article class="pop"><span class="badge-pop">Most chosen</span><h3>Growth</h3><p class="for">Ads that already sell, ready to grow</p><ul><li>Everything in Launch</li><li>12 creatives a month, incl. video scripts</li><li>Testing and scaling system</li><li>Fortnightly strategy call</li></ul><small>For budgets of €3k–15k/month</small></article>
+          <article><h3>Scale</h3><p class="for">Established brands and multiple offers</p><ul><li>Everything in Growth</li><li>Dedicated ad manager</li><li>Landing page and offer testing</li><li>Weekly call and live dashboard</li></ul><small>For budgets over €15k/month</small></article>
+        </div>
+        <p class="ag-note"><span data-ic="info"></span>Pricing is quoted after your free audit, based on your budget and goals. We don't promise returns: results depend on your offer, margins and market, which is why we start with the numbers.</p>
+      </div>
+    </section>
+
+    <!-- PLAYBOOKS -->
+    <section class="wrap" id="playbooks">
+      <div class="panel">
+        <div class="section-h">
+          <div><p class="eyebrow">Grey-area playbooks</p><h2>What Meta allows, niche by niche</h2></div>
+          <div class="filters" role="group" aria-label="Filter">
+            <button class="pill-btn is-on" data-filter="all">All</button>
+            <button class="pill-btn" data-filter="restricted">Restricted</button>
+            <button class="pill-btn" data-filter="auth">Needs permission</button>
+            <button class="pill-btn" data-filter="prohibited">Prohibited</button>
+          </div>
+        </div>
+        <div class="pb-list" id="pbList"></div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="wrap" id="pricing">
+      <div class="section-h center"><div><p class="eyebrow">Pricing</p><h2>Start free. Upgrade when it pays for itself.</h2></div></div>
+      <div class="plans">
+        <article class="plan"><h3>Free</h3><p class="for">For trying it out</p><p class="amt">€0</p><a class="btn btn-ghost btn-block" href="#check">Start checking</a><ul><li>5 checks a month</li><li>Pass/fail report linked to Meta policy</li><li>Line fixes and full rewrites</li><li>Grey-area playbooks</li></ul></article>
+        <article class="plan"><h3>Recovery Pack</h3><p class="for">Locked out right now</p><p class="amt">€49<small> one-off</small></p><button type="button" class="btn btn-ghost btn-block" data-lead="recovery">Start a case</button><ul><li>1 recovery case: diagnosis, official route, documents</li><li>Unlimited appeal drafts</li><li>Case tracker for 60 days</li><li>Evidence pack PDF</li><li>1 month of Pro free</li></ul></article>
+        <article class="plan pop"><span class="badge-pop">Most popular</span><h3>Pro</h3><p class="for">For owners running their own ads</p><p class="amt">€19<small>/month</small></p><a class="btn btn-pink btn-block" href="#check">Try Pro features</a><ul><li>Unlimited checks</li><li>AI rewrites in your tone</li><li>Landing page and image scans</li><li>Chat with a human rep</li><li>Policy change alerts</li></ul></article>
+        <article class="plan"><h3>Agency</h3><p class="for">For media buyers and agencies</p><p class="amt">€79<small>/month</small></p><a class="btn btn-ghost btn-block" href="#check">Talk to us</a><ul><li>10 ad accounts</li><li>Bulk CSV checks</li><li>Team seats</li><li>White-label reports</li><li>1 rep call a month</li></ul></article>
+      </div>
+      <p class="fine center">Software plans. The Guardian Growth agency service is quoted separately after a free audit. Prices in euros, VAT handled at checkout. Annual billing: 2 months free. We never promise approval or reinstatement.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="wrap" id="faq">
+      <div class="panel faq">
+        <div><p class="eyebrow">FAQ</p><h2>Questions, answered</h2></div>
+        <div class="faq-list">
+          <details><summary>Does a "Low risk" result mean Meta will approve my ad?</summary><p>No. It means the copy, targeting and page don't match any of the risks we check for. Meta makes the final decision, also looks at images and video, and changes its rules. Treat the result as a pre-flight check.</p></details>
+          <details><summary>Can you help me advertise a prohibited product?</summary><p>No. For products Meta doesn't allow at all (vapes, payday loans, THC, adult services and similar) we explain why and stop. Disguising them with misspellings or cloaked pages is the fastest way to lose a whole Business Manager.</p></details>
+          <details><summary>Where do the rules come from?</summary><p>From Meta's public Advertising Standards and Business Help Centre pages. Each issue links to the page it's based on, and we show the date the rules were last checked.</p></details>
+          <details><summary>Can you get my Business Manager or ad account back?</summary><p>Nobody outside Meta can honestly promise that. What we do is work out exactly what's restricted, show you Meta's official route for your case, help you prepare the right documents and a factual appeal, and track deadlines. Pro members can chat with a rep, and we offer calls for Business Manager, ad account, hacked-admin and recommendation issues.</p></details>
+          <details><summary>Should I just open a new ad account?</summary><p>No. Creating new or rented accounts to get around a restriction is treated as ban evasion and usually makes the restriction permanent, often for every account linked to you. We'll never suggest it.</p></details>
+          <details><summary>How does the Guardian Growth agency service work?</summary><p>We run your Facebook ads for you: strategy, creatives, launch, testing, scaling and reporting. We start with a free profit audit to find your break-even cost per sale, then manage your campaigns to it. You keep ownership of your ad account and give us partner access through your Business portfolio.</p></details>
+          <details><summary>Do you guarantee profit or ROAS?</summary><p>No. Anyone who guarantees returns on ads is guessing. We show you the maths before you spend, cut what doesn't work quickly, and report what you actually kept.</p></details>
+          <details><summary>Do you need my Meta login?</summary><p>Never. You paste your ad here and act inside Meta yourself. Nothing is sent to Meta.</p></details>
+          <details><summary>Do the rewrites invent claims?</summary><p>No. Example features show in [brackets] until you add your real details, and social-proof templates use placeholders for real numbers. AI rewrites are told not to invent facts and are checked by the same rules.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <a class="logo" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.4 5.1 13.6 12 15 6.9-1.4 12-7.6 12-15V7L16 2Z" fill="var(--ink)"/><path d="m10.5 16.2 3.6 3.6 7.6-7.8" fill="none" stroke="var(--pink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Guardian</b></span></a>
+    <p>Independent service, not affiliated with or endorsed by Meta. Facebook is a trademark of Meta Platforms, Inc. We never ask for Meta passwords or 2FA codes.</p>
+    <div class="foot-links"><a href="https://transparency.meta.com/policies/ad-standards/" target="_blank" rel="noopener">Meta Advertising Standards ↗</a><a href="https://www.facebook.com/business/help/298000447747885" target="_blank" rel="noopener">Special Ad Categories ↗</a></div>
+  </footer>
+
+  <div class="modal" id="leadModal" hidden>
+    <div class="modal-back" data-lead-close></div>
+    <form class="modal-card" id="leadForm" role="dialog" aria-modal="true" aria-labelledby="leadTitle" novalidate>
+      <button type="button" class="icon-btn modal-x" data-lead-close aria-label="Close"><span data-ic="x"></span></button>
+      <p class="eyebrow" id="leadEyebrow">Guardian Growth</p>
+      <h3 id="leadTitle">Book a free profit audit</h3>
+      <p class="lead-sub" id="leadSub">Tell us a little about your business. We'll come back with your break-even numbers and what we'd test first.</p>
+      <div class="lead-summary" id="leadSummary" hidden></div>
+      <label class="field"><span class="lbl">Your name</span><input name="name" required maxlength="80" autocomplete="name"></label>
+      <label class="field"><span class="lbl">Email</span><input name="email" type="email" required maxlength="120" autocomplete="email" inputmode="email"></label>
+      <div class="row-2" id="leadAgencyFields">
+        <label class="field"><span class="lbl">Website</span><input name="website" maxlength="200" placeholder="yourbrand.com"></label>
+        <label class="field"><span class="lbl">Monthly ad budget</span><select name="budget"><option>Not advertising yet</option><option>Under €1k</option><option>€1k–3k</option><option>€3k–15k</option><option>€15k+</option></select></label>
+      </div>
+      <label class="field"><span class="lbl" id="leadMsgLbl">Anything we should know?</span><textarea name="message" maxlength="1500" rows="3"></textarea></label>
+      <p class="lead-privacy">We only use this to reply to you. Never share passwords or 2FA codes with anyone, including us.</p>
+      <p class="lead-err" id="leadErr" hidden></p>
+      <button type="submit" class="btn btn-pink btn-lg btn-block" id="leadSubmit">Send request</button>
+    </form>
+  </div>
+  <div class="pop-card" id="pop" role="dialog" aria-label="Quick fixes" hidden></div>
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle" role="dialog">
+    <div class="drawer-h"><h2 id="drawerTitle">More rewrites</h2><button class="icon-btn" data-close aria-label="Close"><span data-ic="x"></span></button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <script type="module" src="app.js"></script>
+  <script type="module" src="sections.js"></script>
+</body>
+</html>
