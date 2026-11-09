@@ -6,6 +6,7 @@ import http from "node:http";
 import { readFile, stat, appendFile, mkdir } from "node:fs/promises";
 import { lookup } from "node:dns/promises";
 import net from "node:net";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod/v4";
@@ -33,16 +34,80 @@ async function readJson(req, limit = 200_000) {
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"); } catch { throw Object.assign(new Error("Invalid JSON"), { code: 400 }); }
 }
 
+// Behind a hosting proxy (Render, Railway, Fly) every request arrives from the
+// proxy's address, so set TRUST_PROXY=1 there to rate-limit by the visitor's
+// address from X-Forwarded-For instead. The global AI cap below backs this up.
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+function clientIp(req) {
+  if (TRUST_PROXY) {
+    const fwd = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    if (fwd) return fwd;
+  }
+  return req.socket.remoteAddress || "?";
+}
+
 // Per-IP fixed-window rate limit.
 const buckets = new Map();
 function limited(req, key, max, windowMs) {
-  const ip = req.socket.remoteAddress || "?";
-  const k = key + ip, now = Date.now();
-  const b = buckets.get(k) || { n: 0, t: now };
+  const k = key + clientIp(req), now = Date.now();
+  const b = buckets.get(k) || { n: 0, t: now, w: windowMs };
   if (now - b.t > windowMs) { b.n = 0; b.t = now; }
   b.n++;
   buckets.set(k, b);
   return b.n > max;
+}
+// Drop expired windows so the map can't grow forever on a public server.
+setInterval(() => { const now = Date.now(); for (const [k, b] of buckets) if (now - b.t > b.w) buckets.delete(k); }, 10 * 60_000).unref();
+
+// Site-wide daily cap on AI rewrites so a busy day (or a bot) can't run up the
+// Claude bill. Resets at midnight UTC.
+const AI_DAILY_CAP = Number(process.env.AI_DAILY_CAP) || 50;
+const aiDay = { day: "", n: 0 };
+function aiCapReached() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (aiDay.day !== today) { aiDay.day = today; aiDay.n = 0; }
+  if (aiDay.n >= AI_DAILY_CAP) return true;
+  aiDay.n++;
+  return false;
+}
+
+// ---------- leads: save, log, email ----------
+// Hosting disks are often wiped on redeploy, so every request is also written
+// to the server log and, when RESEND_API_KEY + LEAD_NOTIFY_TO are set, emailed.
+const RESEND_KEY = process.env.RESEND_API_KEY || "";
+const NOTIFY_TO = process.env.LEAD_NOTIFY_TO || "";
+const NOTIFY_FROM = process.env.LEAD_NOTIFY_FROM || "Guardian <onboarding@resend.dev>";
+const httpsUrl = (v) => { try { return new URL(v).protocol === "https:" ? v : ""; } catch { return ""; } };
+const PAY_LINKS = { recovery: httpsUrl(process.env.RECOVERY_PAY_LINK || "") };
+if (process.env.RECOVERY_PAY_LINK && !PAY_LINKS.recovery) console.error("RECOVERY_PAY_LINK must be a full https:// link (e.g. https://buy.stripe.com/...); ignoring it.");
+const LEAD_LABEL = { recovery: "Recovery Pack (€49)", agency: "Guardian Growth audit", pro: "Pro waitlist (€19/mo)", team: "Agency plan (€79/mo)" };
+
+async function emailLead(lead) {
+  if (!RESEND_KEY || !NOTIFY_TO) return;
+  const lines = [
+    `New ${LEAD_LABEL[lead.type]} request`, "",
+    `Name: ${lead.name}`, `Email: ${lead.email}`,
+    lead.website && `Website: ${lead.website}`, lead.budget && `Ad budget: ${lead.budget}`,
+    lead.message && `\nMessage:\n${lead.message}`, lead.summary && `\nSummary:\n${lead.summary}`,
+    `\nRequest ID: ${lead.id}`, lead.payUrl && `Pay link shown: yes (Stripe client_reference_id = ${lead.id})`,
+    `Received: ${lead.at}`,
+  ].filter(Boolean).join("\n");
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${RESEND_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: NOTIFY_FROM, to: NOTIFY_TO.split(",").map((s) => s.trim()), reply_to: lead.email, subject: `[Guardian] ${LEAD_LABEL[lead.type]}: ${lead.name.replace(/\s+/g, " ")}`, text: lines }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
+}
+
+async function saveLead(lead) {
+  console.log("LEAD " + JSON.stringify(lead));
+  try {
+    await mkdir(path.join(here, "data"), { recursive: true });
+    await appendFile(path.join(here, "data", "leads.jsonl"), JSON.stringify(lead) + "\n");
+  } catch (e) { console.error("lead file write failed:", e.message); }
+  try { await emailLead(lead); } catch (e) { console.error("lead email failed:", e.message); }
 }
 
 // ---------- landing page scan ----------
@@ -195,7 +260,7 @@ Write ${count} compliant variants.`;
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://localhost");
-    if (url.pathname === "/api/health") return send(res, 200, { ok: true, ai: AI_ON, model: AI_ON ? MODEL : null });
+    if (url.pathname === "/api/health") return send(res, 200, { ok: true, ai: AI_ON, model: AI_ON ? MODEL : null, leadEmail: !!(RESEND_KEY && NOTIFY_TO), recoveryPay: !!PAY_LINKS.recovery });
 
     if (url.pathname === "/api/landing" && req.method === "POST") {
       if (limited(req, "lp", 40, 3600_000)) return send(res, 429, { error: "Too many landing page checks. Try again in an hour." });
@@ -209,22 +274,27 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // Profit-audit and recovery-case requests. Stored locally as JSON lines
-    // until a CRM or email service is connected.
+    // Recovery cases, profit audits and plan waitlists: saved, logged and
+    // emailed to the owner (see saveLead).
     if (url.pathname === "/api/lead" && req.method === "POST") {
       if (limited(req, "lead", 10, 3600_000)) return send(res, 429, { ok: false, error: "Too many requests. Please try again later." });
       const b = await readJson(req, 20_000);
       const str = (v, n) => String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, (c) => (c === "\n" ? c : " ")).trim().slice(0, n);
-      const lead = { at: new Date().toISOString(), type: b.type === "recovery" ? "recovery" : "agency", name: str(b.name, 80), email: str(b.email, 120), website: str(b.website, 200), budget: str(b.budget, 40), message: str(b.message, 1500), summary: str(b.summary, 800) };
+      const type = LEAD_LABEL[b.type] ? b.type : "agency";
+      const id = "G" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase();
+      const lead = { id, at: new Date().toISOString(), type, name: str(b.name, 80), email: str(b.email, 120), website: str(b.website, 200), budget: str(b.budget, 40), message: str(b.message, 1500), summary: str(b.summary, 800) };
       if (!lead.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email)) return send(res, 400, { ok: false, error: "Please add your name and a valid email." });
-      await mkdir(path.join(here, "data"), { recursive: true });
-      await appendFile(path.join(here, "data", "leads.jsonl"), JSON.stringify(lead) + "\n");
-      return send(res, 200, { ok: true });
+      // Stripe Payment Links accept client_reference_id, which ties the payment
+      // back to this request without putting the customer's details in the URL.
+      if (PAY_LINKS[type]) { const u = new URL(PAY_LINKS[type]); u.searchParams.set("client_reference_id", id); lead.payUrl = u.href; }
+      await saveLead(lead);
+      return send(res, 200, { ok: true, id, payUrl: lead.payUrl || null });
     }
 
     if (url.pathname === "/api/rewrite" && req.method === "POST") {
       if (!AI_ON) return send(res, 503, { error: "AI rewrites aren't configured on this server. Set ANTHROPIC_API_KEY." });
       if (limited(req, "ai", 30, 3600_000)) return send(res, 429, { error: "Rewrite limit reached. Try again in an hour." });
+      if (aiCapReached()) return send(res, 429, { error: "AI rewrites are busy today. The built-in rewrites still work." });
       const body = await readJson(req);
       try { return send(res, 200, await aiRewrite(body)); }
       catch (e) { console.error("rewrite failed:", e.status || "", e.message); return send(res, 502, { error: "The AI rewrite failed. The built-in rewrites still work." }); }
@@ -245,4 +315,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Guardian Pre-Flight running on http://localhost:${PORT} (AI rewrites: ${AI_ON ? "on, " + MODEL : "off"})`));
+server.listen(PORT, () => console.log(`Guardian Pre-Flight running on http://localhost:${PORT} (AI rewrites: ${AI_ON ? `on, ${MODEL}, ${AI_DAILY_CAP}/day` : "off"}; lead email: ${RESEND_KEY && NOTIFY_TO ? "on" : "off"}; recovery pay link: ${PAY_LINKS.recovery ? "on" : "off"})`));

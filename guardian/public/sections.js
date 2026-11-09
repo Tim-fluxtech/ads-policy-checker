@@ -115,16 +115,22 @@ function openLead(type) {
   leadType = type;
   const m = $("#leadModal"), f = $("#leadForm");
   if (f.dataset.done) { f.innerHTML = f.dataset.orig; delete f.dataset.done; bindIcons(f); }
-  const rec = type === "recovery";
-  $("#leadEyebrow").textContent = rec ? "Recovery Pack · €49" : "Guardian Growth";
-  $("#leadTitle").textContent = rec ? "Start your recovery case" : "Book a free profit audit";
-  $("#leadSub").textContent = rec
-    ? "We'll reply with your case set-up and a payment link. You can cancel for a refund any time before we draft your appeal."
-    : "Tell us about your business. We'll come back with your break-even numbers and what we'd test first, whether or not you hire us.";
+  const rec = type === "recovery", plan = type === "pro" || type === "team";
+  const copy = {
+    recovery: ["Recovery Pack · €49", "Start your recovery case", "Send your case details. You can pay now to start straight away, or wait for our reply with your case set-up. Full refund any time before we draft your appeal."],
+    agency: ["Guardian Growth", "Book a free profit audit", "Tell us about your business. We'll come back with your break-even numbers and what we'd test first, whether or not you hire us."],
+    pro: ["Pro · €19/month", "Get early access to Pro", "Pro accounts are opening to a first group of advertisers. Leave your email and we'll invite you, with your first month free. No payment now."],
+    team: ["Agency plan · €79/month", "Get early access for your team", "Tell us how many ad accounts you run. We'll invite you to the Agency plan as it opens, with your first month free. No payment now."],
+  }[type] || [];
+  $("#leadEyebrow").textContent = copy[0];
+  $("#leadTitle").textContent = copy[1];
+  $("#leadSub").textContent = copy[2];
   $("#leadAgencyFields").hidden = rec;
-  $("#leadMsgLbl").textContent = rec ? "What does the notice from Meta say? (optional)" : "What do you sell, and what's not working? (optional)";
+  $("#leadMsgLbl").textContent = rec ? "What does the notice from Meta say? (optional)" : type === "team" ? "How many ad accounts, and which niches? (optional)" : plan ? "What do you advertise? (optional)" : "What do you sell, and what's not working? (optional)";
+  $("#leadSubmit").textContent = plan ? "Join early access" : "Send request";
+  $("#leadSubmit").disabled = false; // the saved form HTML keeps the "Sending…" disabled state
   const sum = $("#leadSummary");
-  const text = rec ? caseSummary() : (() => { const n = calcNumbers(); return `Order value ${eur(n.aov)} · margin ${eur(n.margin)} · break-even CPA ${eur(n.beCpa)} · current CPA ${eur(n.cpa)} · budget ${eur(n.budget)}/month`; })();
+  const text = rec ? caseSummary() : plan ? "" : (() => { const n = calcNumbers(); return `Order value ${eur(n.aov)} · margin ${eur(n.margin)} · break-even CPA ${eur(n.beCpa)} · current CPA ${eur(n.cpa)} · budget ${eur(n.budget)}/month`; })();
   sum.hidden = !text;
   sum.innerHTML = text ? `<b>${rec ? "Your diagnosis" : "Your numbers from the calculator"}</b>${esc(text).replace(/\n/g, "<br>")}` : "";
   $("#leadErr").hidden = true;
@@ -141,7 +147,7 @@ async function submitLead(e) {
   const data = Object.fromEntries(new FormData(f));
   if (!data.name?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || "")) { err.textContent = "Please add your name and a valid email."; err.hidden = false; return; }
   data.type = leadType;
-  data.summary = leadType === "recovery" ? caseSummary() : $("#leadSummary").textContent;
+  data.summary = leadType === "recovery" ? caseSummary() : $("#leadSummary").hidden ? "" : $("#leadSummary").textContent;
   btn.disabled = true; btn.innerHTML = `<span class="spin"></span> Sending…`;
   try {
     const r = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
@@ -149,11 +155,17 @@ async function submitLead(e) {
     if (!r.ok || !j.ok) throw new Error(j.error || "failed");
     f.dataset.orig = f.innerHTML;
     f.dataset.done = "1";
-    f.innerHTML = `<button type="button" class="icon-btn modal-x" data-lead-close aria-label="Close">${ic("x", 18)}</button><div class="lead-ok">${ic("circle-check", 52)}<h3>Request received</h3><p class="lead-sub">Thanks, ${esc(data.name.split(" ")[0])}. We'll reply to ${esc(data.email)}${leadType === "recovery" ? " with your case set-up" : " with your audit"}.</p><button type="button" class="btn btn-pink" data-lead-close>Done</button></div>`;
+    const first = esc(data.name.trim().split(/\s+/)[0]);
+    const pay = leadType === "recovery" && /^https:\/\//.test(j.payUrl || "") ? j.payUrl : "";
+    const what = { recovery: " with your case set-up", agency: " with your audit", pro: " when your Pro invite is ready", team: " when your Agency invite is ready" }[leadType];
+    const body = pay
+      ? `<h3>Case ${esc(j.id)} received</h3><p class="lead-sub">Thanks, ${first}. Pay now and we start on your case today, or wait for our email to ${esc(data.email)}. Full refund any time before we draft your appeal.</p><a class="btn btn-pink btn-lg" href="${esc(pay)}" target="_blank" rel="noopener">Pay €49 and start my case</a><button type="button" class="btn btn-ghost" data-lead-close>I'll wait for the email</button>`
+      : `<h3>${leadType === "pro" || leadType === "team" ? "You're on the list" : "Request received"}</h3><p class="lead-sub">Thanks, ${first}. We'll reply to ${esc(data.email)}${what}.</p><button type="button" class="btn btn-pink" data-lead-close>Done</button>`;
+    f.innerHTML = `<button type="button" class="icon-btn modal-x" data-lead-close aria-label="Close">${ic("x", 18)}</button><div class="lead-ok">${ic("circle-check", 52)}${body}</div>`;
   } catch (ex) {
     err.textContent = ex.message === "failed" || ex.name === "TypeError" ? "We couldn't send that right now. Please try again in a moment." : ex.message;
     err.hidden = false;
-    btn.disabled = false; btn.textContent = "Send request";
+    btn.disabled = false; btn.textContent = leadType === "pro" || leadType === "team" ? "Join early access" : "Send request";
   }
 }
 

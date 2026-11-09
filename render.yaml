@@ -1,0 +1,32 @@
+# Render Blueprint for the Guardian site (guardian/). In Render: New → Blueprint,
+# pick this GitHub repo, then fill in the secret values it asks for.
+services:
+  - type: web
+    name: guardian
+    runtime: node
+    rootDir: guardian
+    # Starter ($7/month) stays awake. The free plan sleeps after 15 idle
+    # minutes and takes ~50 seconds to wake, which loses visitors.
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: AI_DAILY_CAP
+        value: "50"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: LEAD_NOTIFY_TO
+        sync: false
+      - key: LEAD_NOTIFY_FROM
+        sync: false
+      - key: RECOVERY_PAY_LINK
+        sync: false
